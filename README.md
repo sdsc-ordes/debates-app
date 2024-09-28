@@ -5,5 +5,20 @@ User Interface for political debates with Solr and Sveltekit
 Load data on demand:
 
 ```
-docker run --rm -v "$PWD/data/solr:/debates_solr/data" --network=host solr post -c debates /debates_solr/data
+docker-compose exec solr post -c debates /debates_solr/data
 ```
+
+Delete all data: go to documents and enter as xml:
+
+```
+<delete><query>*:*</query></delete>
+```
+
+# TODO
+
+1. change field types in solr for time_start and time_end  -> pint
+2. transform the times in pyvideo
+3. load data again
+4. transform dates to isodates
+
+
