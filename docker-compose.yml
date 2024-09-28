@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  solr:
+    build:
+      context: ./solr
+    container_name: debates_solr
+    ports:
+      - "8983:8983"
+    networks:
+      - debates_network
+    command:
+      - solr-precreate
+      - debates 
+      - /opt/solr/server/solr/configsets/debates        
+    volumes:
+      - ./data/solr:/debates_solr/data
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - solr
+    networks:
+      - debates_network
+    environment:
+      VITE_SOLR_API_URL: "http://debates_solr:8983/solr"
+
+networks:
+  debates_network:
+    driver: bridge
