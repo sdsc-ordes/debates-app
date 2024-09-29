@@ -26,7 +26,16 @@ services:
     networks:
       - debates_network
     environment:
-      VITE_SOLR_API_URL: "http://debates_solr:8983/solr"
+      SOLR_API_URL: http://cors:80/solr/debates
+
+  cors:
+    build: 
+      context: ./proxy
+    container_name: cors
+    networks:
+      - debates_network    
+    ports:
+      - "8010:80"
 
 networks:
   debates_network:
