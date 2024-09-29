@@ -4,3 +4,6 @@
 [submodule "frontend"]
 	path = frontend
 	url = git@github.com:sdsc-ordes/debates-ui.git
+[submodule "processing"]
+	path = processing
+	url = git@github.com:sdsc-ordes/pyvideotranscripts.git
