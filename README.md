@@ -2,6 +2,11 @@
 
 User Interface for political debates with Solr and Sveltekit
 
+```
+docker-compose build --no-cache
+docker-compose up -d --force-recreate
+```
+
 Load data on demand:
 
 ```
