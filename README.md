@@ -38,6 +38,18 @@ In case you want to reload data in Solr (which needed on a schema change):
 
 Afterwards load the data again as described above.
 
+### Prepare the data for Solr
+
+See https://github.com/sdsc-ordes/pyvideotranscripts.git: set up the project as described there and run the script to parse the SRT Transcripts of the video. The output is for now copied manually into the `data/solr` folder of this repo. 
+
 ### Frontend development
 
 Once the Solr and proxy are up in the docker compose, the Frontend can als be developed locally: see https://github.com/sdsc-ordes/debates-ui.git
+
+The video and transcripts for the frontend are expected at `frontend/static/input/video.mp4` and `frontend/static/input/subtitles.srt`.
+
+## TODO
+
+- generalize the data location
+- provide solr url as an enviroment variable
+- remove hard coding of inputs
