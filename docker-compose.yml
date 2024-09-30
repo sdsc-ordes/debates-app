@@ -31,7 +31,6 @@ services:
   proxy:
     build:
       context: ./proxy
-    container_name: cors
     networks:
       - debates_network
     ports:
