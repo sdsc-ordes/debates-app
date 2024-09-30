@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   solr:
@@ -11,8 +11,8 @@ services:
       - debates_network
     command:
       - solr-precreate
-      - debates 
-      - /opt/solr/server/solr/configsets/debates        
+      - debates
+      - /opt/solr/server/solr/configsets/debates
     volumes:
       - ./data/solr:/debates_solr/data
 
@@ -26,14 +26,14 @@ services:
     networks:
       - debates_network
     environment:
-      SOLR_API_URL: http://cors:80/solr/debates
+      SOLR_API_URL: http://proxy:80/solr/debates
 
-  cors:
-    build: 
+  proxy:
+    build:
       context: ./proxy
     container_name: cors
     networks:
-      - debates_network    
+      - debates_network
     ports:
       - "8010:80"
 
