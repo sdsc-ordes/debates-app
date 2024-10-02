@@ -26,7 +26,9 @@ services:
     networks:
       - debates_network
     environment:
-      SOLR_API_URL: http://proxy:80/solr/debates
+      VITE_SOLR_URL: http://proxy:80/solr/debates
+      VITE_VIDEO_INPUT: video.mp4
+      VITE_SUBTITLES_INPUT: subtitles.srt
 
   proxy:
     build:
