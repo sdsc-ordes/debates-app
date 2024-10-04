@@ -12,12 +12,16 @@
 -e file:.
 click==8.1.7
     # via typer
+dnspython==2.6.1
+    # via pymongo
 markdown-it-py==3.0.0
     # via rich
 mdurl==0.1.2
     # via markdown-it-py
 pygments==2.18.0
     # via rich
+pymongo==4.10.1
+    # via srt-dataloader
 python-dotenv==1.0.1
     # via srt-dataloader
 rich==13.9.1
