@@ -1,13 +1,18 @@
 [project]
-name = "debates-dataloader"
+name = "srt-dataloader"
 version = "0.1.0"
 description = "Add your description here"
 authors = [
     { name = "sabinem", email = "5292683+sabinem@users.noreply.github.com" }
 ]
-dependencies = []
+dependencies = [
+    "typer>=0.12.5",
+]
 readme = "README.md"
 requires-python = ">= 3.11"
+
+[project.scripts]
+"srt-dataloader" = "srt_dataloader:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -21,4 +26,4 @@ dev-dependencies = []
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/debates_dataloader"]
+packages = ["src/srt_dataloader"]
