@@ -24,7 +24,7 @@ def process_subtitle(subtitle):
     subtitle_dict = {
         "index": subtitle.index,
         "start": subtitle.start.total_seconds(),
-        "end": subtitle.start.total_seconds(),
+        "end": subtitle.end.total_seconds(),
         "fragment": fragment,
         "speaker": speaker,
     } 
