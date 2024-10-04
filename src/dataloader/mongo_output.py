@@ -1,4 +1,9 @@
 import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+print(os.getenv("MONGO_URL"))
 
 
 def write_to_file(data, output, title):

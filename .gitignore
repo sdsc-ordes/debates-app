@@ -14,3 +14,6 @@ input
 
 # output data
 output
+
+# environment variables
+.env
