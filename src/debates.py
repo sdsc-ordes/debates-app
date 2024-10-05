@@ -36,34 +36,15 @@ def parse_srt(
     file: str,
     title: str,
 ):
-    try:
-        mongo_output.mongo_get_videos()
-        with open('input/input.srt', 'r') as f:
-            data = f.read()
-        processed_data = srt_parser.process_data(data)
-        mongo_output.write_to_file(processed_data, file, title)   
-    except Exception as e:
-        print(f"An error {e} occurred")
-        raise typer.Exit()    
+    #try:
+    with open('input/input.srt', 'r') as f:
+        data = f.read()
+    processed_data = srt_parser.process_data(data)
+    mongo_output.write_to_file(processed_data, file, title)   
+    #except Exception as e:
+    #print(f"An error {e} occurred")
+    #raise typer.Exit()    
 
 
 if __name__ == "__main__":
     app()
-
-
-app = typer.Typer()
-
-
-@app.command()
-def create():
-    print("Creating user: Hiro Hamada")
-
-
-@app.command()
-def delete():
-    print("Deleting user: Hiro Hamada")
-
-
-if __name__ == "__main__":
-    app()    
-
