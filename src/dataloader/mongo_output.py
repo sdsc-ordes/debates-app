@@ -67,14 +67,25 @@ def get_list_from_cursor(cursor):
     return document_list
 
 
-def get_speakers(subtitles):
+def get_speakers(data):
+    subtitles = [{
+        "index": subtitle["index"],
+        "start": subtitle["start"],
+        "end": subtitle["end"],
+        "content": subtitle["content"],
+        "segment_nr": subtitle["segment_nr"],
+    } for subtitle in data]  
+    return subtitles
+
+
+def get_subtitles(data):
     speaker_ids = {subtitle["speaker_id"] for subtitle in subtitles}
     speakers = [{
         "speaker_id": speaker_id,
         "name": "",
         "country": "",
     } for speaker_id in speaker_ids]  
-    return speakers
+    return speakers       
 
 
 def get_segments(subtitles):
@@ -94,13 +105,11 @@ def get_segment(subtitles, segment_nr):
     end = max([subtitle["end"] for subtitle in subtitles_in_segment]) 
     start_index = min([subtitle["index"] for subtitle in subtitles_in_segment]) 
     end_index = max([subtitle["index"] for subtitle in subtitles_in_segment]) 
-    content = " ".join([subtitle["content"] for subtitle in subtitles_in_segment])
     segment = {
         "speaker_id": speaker_id,
         "start": start,
         "end": end,
         "first_index": start_index,
         "last_index": end_index,
-        "content": content,
     }
     return segment
