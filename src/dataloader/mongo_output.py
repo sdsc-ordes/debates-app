@@ -24,7 +24,7 @@ def get_video_data(data, title):
         "video_title": title,
         "speakers": get_speakers(data),
         "segments": get_segments(data),
-        "subtitles": data,
+        "subtitles": get_subtitles(data),
         "corrections": [],
         "video_s3_id": str(uuid.uuid4()),
         "version_id": str(uuid.uuid4()),
@@ -62,7 +62,7 @@ def get_list_from_cursor(cursor):
     return document_list
 
 
-def get_speakers(data):
+def get_subtitles(data):
     subtitles = [{
         "index": subtitle["index"],
         "start": subtitle["start"],
@@ -73,8 +73,8 @@ def get_speakers(data):
     return subtitles
 
 
-def get_subtitles(data):
-    speaker_ids = {subtitle["speaker_id"] for subtitle in subtitles}
+def get_speakers(data):
+    speaker_ids = {subtitle["speaker_id"] for subtitle in data}
     speakers = [{
         "speaker_id": speaker_id,
         "name": "",
@@ -83,17 +83,17 @@ def get_subtitles(data):
     return speakers       
 
 
-def get_segments(subtitles):
-    segment_nrs = {subtitle["segment_nr"] for subtitle in subtitles}
+def get_segments(data):
+    segment_nrs = {subtitle["segment_nr"] for subtitle in data}
     segments = []
     for i, segment_nr in enumerate(segment_nrs):
-        segment = get_segment(subtitles, segment_nr)
+        segment = get_segment(data, segment_nr)
         segments.append(segment)
     return segments
 
-def get_segment(subtitles, segment_nr):
+def get_segment(data, segment_nr):
     subtitles_in_segment = [
-        subtitle for subtitle in subtitles if subtitle["segment_nr"] == segment_nr
+        subtitle for subtitle in data if subtitle["segment_nr"] == segment_nr
     ]
     speaker_id = subtitles_in_segment[0]["speaker_id"]
     segment_nr = subtitles_in_segment[0]["segment_nr"]
