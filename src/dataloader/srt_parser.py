@@ -1,5 +1,5 @@
 import re
-from srt import parse, SRTParseError
+from srt import parse
 
 
 def process_data(data):
@@ -15,18 +15,18 @@ def process_data(data):
             segment_nr += 1  
             speaker_id = current_speaker_id
         subtitle_dict["segment_nr"] = segment_nr    
-        subtitles_processed.append(subtitle_dict)   
+        subtitles_processed.append(subtitle_dict) 
     return subtitles_processed
 
     
 def process_subtitle(subtitle):
-    speaker, content = get_speaker(subtitle.content)
+    speaker_id, content = get_speaker(subtitle.content)
     subtitle_dict = {
         "index": subtitle.index,
         "start": subtitle.start.total_seconds(),
         "end": subtitle.end.total_seconds(),
         "content": content,
-        "speaker_id": speaker,
+        "speaker_id": speaker_id,
     } 
     return subtitle_dict
 
@@ -37,6 +37,6 @@ def get_speaker(content):
     """
     match = re.match(r"\[(SPEAKER_\d+)\]:\s*(.*)", content)
     if match:
-        speaker = match.group(1)  
+        speaker_id = match.group(1)  
         content = match.group(2)
-        return speaker, content
+        return speaker_id, content
