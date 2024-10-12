@@ -1,6 +1,20 @@
 version: "3.8"
 
 services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2022-02-18T01-50-10Z
+    volumes:
+      - /Users/smaennel/WORK/UNHCR/volumes/minio:/data
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: 'minio_user'
+      MINIO_ROOT_PASSWORD: 'minio_password'
+      MINIO_ADDRESS: ':9000'
+      MINIO_CONSOLE_ADDRESS: ':9001'
+    command: minio server /data      
+
   solr:
     build:
       context: ./solr
@@ -9,12 +23,48 @@ services:
       - "8983:8983"
     networks:
       - debates_network
+    volumes:
+      - /Users/smaennel/WORK/UNHCR/volumes/solr:/var/solr  
     command:
       - solr-precreate
       - debates
       - /opt/solr/server/solr/configsets/debates
+
+  mongodb-instance:
+    image: mongo:7.0.8
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: test1234
+      MONGO_INITDB_DATABASE: debates
+    networks:
+      - debates_network
     volumes:
-      - ./data/solr:/debates_solr/data
+      - /Users/smaennel/WORK/UNHCR/volumes/mongo:/data/db    
+
+  mongodb-express:
+    image: mongo-express:1.0.2-18
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_OPTIONS_EDITORTHEME: "ambiance"
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: test1234
+      ME_CONFIG_MONGODB_URL: mongodb://admin:test1234@mongodb-instance:27017/
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+    networks:
+      - debates_network
+    depends_on:
+      - mongodb-instance      
+ 
+  proxy:
+    build:
+      context: ./proxy
+    networks:
+      - debates_network
+    ports:
+      - "8010:80"
 
   frontend:
     build:
@@ -26,17 +76,29 @@ services:
     networks:
       - debates_network
     environment:
-      VITE_SOLR_URL: http://proxy:80/solr/debates
-      VITE_VIDEO_INPUT: video.mp4
-      VITE_SUBTITLES_INPUT: subtitles.srt
+      VITE_SOLR_URL: http://localhost:8010/solr/debates/select
+      VITE_VIDEO_INPUT: "video.mp4"
+      VITE_SUBTITLES_INPUT: "subtitles.srt"
+      VITE_MONGO_URL: mongodb://localhost:27017/
+      VITE_MONGO_DB: debates
+      VITE_MONGO_VIDEO_COLLECTION: videos       
 
-  proxy:
+  dataloader:
     build:
-      context: ./proxy
+      context: ./dataloader
+      dockerfile: Dockerfile
+    stdin_open: true  # Keep STDIN open (so you can interact)
+    tty: true         # Allocate a pseudo-TTY     
     networks:
       - debates_network
-    ports:
-      - "8010:80"
+    environment:
+      SOLR_URL: http://localhost:8010/solr/debates/select
+      VIDEO_INPUT: "video.mp4"
+      SUBTITLES_INPUT: "subtitles.srt"
+      MONGO_URL: mongodb://localhost:27017/
+      MONGO_DB: debates
+      MONGO_VIDEO_COLLECTION: videos 
+    command: ["/bin/sh"]           
 
 networks:
   debates_network:
