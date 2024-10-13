@@ -1,5 +1,5 @@
 import json
-from dataloader.mongodb import mongodb_find_videos
+
 
 def write_output_to_file(processed_data, output, title):
     """write parsed video data to a json file"""

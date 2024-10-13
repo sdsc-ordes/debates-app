@@ -7,9 +7,9 @@ from pprint import pprint
 
 load_dotenv()
 
-MONGO_URL = os.getenv("DEBATES_MONGO_URL")
-MONGO_DB = os.getenv("DEBATES_MONGO_DB")
-COLLECTION_VIDEOS = os.getenv("DEBATES_COLLECTION_VIDEOS")
+MONGO_URL = os.getenv("MONGO_URL")
+MONGO_DB = os.getenv("MONGO_DB")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
 
 
 def mongodb_insert_video(data, title):
@@ -18,19 +18,20 @@ def mongodb_insert_video(data, title):
     _mongodb_insert_one(video_data)
 
 
-def mongodb_find_videos():
+def mongodb_find_video(version_id):
     """Find videos in the mongodb: currently all videos are returned"""
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        cursor = db[COLLECTION_VIDEOS].find({})
-        documents = _get_list_from_cursor(cursor)
-    pprint(documents)
+        document = db[MONGO_COLLECTION].find_one({
+            "version_id": version_id,
+        })
+    return document
 
 
 def _mongodb_insert_one(video_data):
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        video_id = db[COLLECTION_VIDEOS].insert_one(video_data).inserted_id
+        video_id = db[MONGO_COLLECTION].insert_one(video_data).inserted_id
         if video_id:
             print(f"video has been successfully added at {video_id}")
 
