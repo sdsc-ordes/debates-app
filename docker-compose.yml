@@ -41,7 +41,7 @@ services:
     networks:
       - debates_network
     volumes:
-      - /Users/smaennel/WORK/UNHCR/volumes/mongo:/data/db    
+      - /Users/smaennel/WORK/UNHCR/volumes/mongo:/data/db
 
   mongodb-express:
     image: mongo-express:1.0.2-18
@@ -56,8 +56,8 @@ services:
     networks:
       - debates_network
     depends_on:
-      - mongodb-instance      
- 
+      - mongodb-instance
+
   proxy:
     build:
       context: ./proxy
