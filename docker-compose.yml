@@ -13,7 +13,7 @@ services:
       MINIO_ROOT_PASSWORD: 'minio_password'
       MINIO_ADDRESS: ':9000'
       MINIO_CONSOLE_ADDRESS: ':9001'
-    command: minio server /data      
+    command: minio server /data
 
   solr:
     build:
@@ -24,7 +24,7 @@ services:
     networks:
       - debates_network
     volumes:
-      - /Users/smaennel/WORK/UNHCR/volumes/solr:/var/solr  
+      - /Users/smaennel/WORK/UNHCR/volumes/solr:/var/solr
     command:
       - solr-precreate
       - debates
@@ -81,14 +81,14 @@ services:
       VITE_SUBTITLES_INPUT: "subtitles.srt"
       VITE_MONGO_URL: mongodb://localhost:27017/
       VITE_MONGO_DB: debates
-      VITE_MONGO_VIDEO_COLLECTION: videos       
+      VITE_MONGO_VIDEO_COLLECTION: videos
 
   dataloader:
     build:
       context: ./dataloader
       dockerfile: Dockerfile
-    stdin_open: true  # Keep STDIN open (so you can interact)
-    tty: true         # Allocate a pseudo-TTY     
+    stdin_open: true
+    tty: true
     networks:
       - debates_network
     environment:
@@ -97,8 +97,8 @@ services:
       SUBTITLES_INPUT: "subtitles.srt"
       MONGO_URL: mongodb://localhost:27017/
       MONGO_DB: debates
-      MONGO_VIDEO_COLLECTION: videos 
-    command: ["/bin/sh"]           
+      MONGO_VIDEO_COLLECTION: videos
+    command: ["/bin/sh"]
 
 networks:
   debates_network:
