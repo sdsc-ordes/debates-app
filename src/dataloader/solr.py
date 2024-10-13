@@ -26,9 +26,24 @@ def update_solr(version_id):
     solr = Solr(SOLR_URL, always_commit=True)
     video_data = mongodb_find_video(version_id)
     documents = _map_video_data(video_data)
+    print(documents[0])
     solr.add(documents)
 
 
+def delete_all_documents_in_solr():
+    solr = Solr(SOLR_URL, always_commit=True)
+    solr.delete(q='*:*')
+
+
 def _map_video_data(video_data):
-    segments = video_data.get("segments")
+    subtitles = video_data.get("subtitles")
+    segments = [_map_segment(segment, subtitles)
+                for segment in video_data["segments"]]
     return segments
+
+
+def _map_segment(segment, subtitles):
+    segment["statement"] = [
+        subtitle["content"]
+        for subtitle in subtitles[segment["first_index"]:segment["last_index"]]]
+    return segment

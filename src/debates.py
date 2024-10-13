@@ -2,7 +2,7 @@ import typer
 from dataloader.parser import parse_srt_file
 from dataloader.mongodb import mongodb_insert_video, mongodb_find_video
 from dataloader.file import write_output_to_file
-from dataloader.solr import test_solr_connection, update_solr
+from dataloader.solr import test_solr_connection, update_solr, delete_all_documents_in_solr
 from typing_extensions import Annotated
 
 
@@ -37,10 +37,13 @@ def solr_add(
 
 @app.command()
 def solr_admin(
-    testconn: Annotated[bool, typer.Option(help="Test Solr Connection.")] = False,
+    test: Annotated[bool, typer.Option(help="Test Solr Connection")] = False,
+    delete: Annotated[bool, typer.Option(help="Delete all documents from Solr")] = False,
 ):
-    if testconn: 
+    if test:
         test_solr_connection()
+    if delete:
+        delete_all_documents_in_solr()
 
 
 @app.command()

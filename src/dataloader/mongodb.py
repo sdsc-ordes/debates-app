@@ -42,7 +42,6 @@ def _get_video_data(data, title):
         "speakers": _get_speakers(data),
         "segments": _get_segments(data),
         "subtitles": _get_subtitles(data),
-        "corrections": [],
         "video_s3_id": str(uuid.uuid4()),
         "version_id": str(uuid.uuid4()),
     }
