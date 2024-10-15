@@ -1,7 +1,8 @@
 import typer
+from datetime import datetime
 from dataloader.parser import parse_srt_file
 from dataloader.mongodb import mongodb_insert_video, mongodb_find_video
-from dataloader.file import write_output_to_file
+from dataloader.file import write_output_to_file, extract_iso_date_from_filename
 from dataloader.solr import test_solr_connection, update_solr, delete_all_documents_in_solr
 from typing_extensions import Annotated
 
@@ -20,12 +21,12 @@ def mongo_find_one(
 @app.command()
 def mongo_post(
     srt_file: str,
-    title: str,
 ):
     with open('input/input.srt', 'r') as f:
         data = f.read()
+    date = extract_iso_date_from_filename(srt_file)
     processed_data = parse_srt_file(data)
-    mongodb_insert_video(processed_data, title)
+    mongodb_insert_video(processed_data, date)
 
 
 @app.command()
@@ -47,15 +48,17 @@ def solr_admin(
 
 
 @app.command()
-def parse_srt(
-    srt_file: str,
-    file: str,
-    title: str,
+def parse(
+    srt_file: Annotated[str, typer.Argument(help="SRT file as transcription of a video")],
+    output: Annotated[str, typer.Option(
+        help="Output path: when provide the output will be written to a file"
+    )],
 ):
-    with open('input/input.srt', 'r') as f:
+    """parses SRT file to json output"""
+    with open(srt_file, 'r') as f:
         data = f.read()
     processed_data = parse_srt_file(data)
-    write_output_to_file(processed_data, file, title)
+    write_output_to_file(processed_data, output)
 
 
 if __name__ == "__main__":
