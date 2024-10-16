@@ -27,6 +27,13 @@ def mongo_add(
     with open(srt_file, 'r') as f:
         data = f.read()
     date = extract_iso_date_from_filename(srt_file)
+    if not date:
+        print(
+            f"The date for the video could not be derived from the filename {srt_file}.\n",
+            "- It is expected as YYYYMMDD in the name of the file, such as HRC_20220328.srt.\n",
+            "- Fix this and run the command again."
+        )
+        raise typer.Exit()
     processed_data = parse_srt_file(data)
     video_id = mongodb_insert_video(processed_data, date)
     print(f"video has been successfully added at {video_id}")
