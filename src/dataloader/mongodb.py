@@ -37,6 +37,12 @@ def _mongodb_insert_one(video_data):
             return video_id
 
 
+def mongodb_delete_videos():
+    with MongoClient(MONGO_URL) as client:
+        db = client[MONGO_DB]
+        db.drop_collection(MONGO_COLLECTION)
+
+
 def _get_video_data(data, date):
     video_data = {
         "date": date,

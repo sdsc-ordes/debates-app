@@ -1,9 +1,15 @@
 import typer
 from datetime import datetime
 from dataloader.parser import parse_srt_file
-from dataloader.mongodb import mongodb_insert_video, mongodb_find_video
-from dataloader.file import write_output_to_file, extract_iso_date_from_filename
-from dataloader.solr import test_solr_connection, update_solr, delete_all_documents_in_solr
+from dataloader.mongodb import (
+    mongodb_insert_video, mongodb_find_video, mongodb_delete_videos
+)
+from dataloader.file import (
+    write_output_to_file, extract_iso_date_from_filename
+)
+from dataloader.solr import (
+    test_solr_connection, update_solr, delete_all_documents_in_solr
+)
 from typing_extensions import Annotated
 
 
@@ -11,11 +17,27 @@ app = typer.Typer()
 
 
 @app.command()
-def mongo_find_one(
-    version_id: Annotated[str, typer.Argument(help="version_id of a video")]
+def mongo_get(
+    version_id: Annotated[str, typer.Argument(help="version_id of a video")],
+    output: Annotated[str, typer.Option(
+        help="Output path: when provide the output will be written to a file"
+    )],
 ):
     """find a video by its version_id in the mongo db"""
-    mongodb_find_video(version_id)
+    video_data = mongodb_find_video(version_id)
+    if video_data:
+        write_output_to_file(video_data, output)
+    else:
+        print(f"video with version_id {version_id} has not been found.")
+
+
+@app.command()
+def mongo_admin(
+    test: Annotated[bool, typer.Option(help="Test Solr Connection")] = False,
+    delete: Annotated[bool, typer.Option(help="Delete all documents from Solr")] = False,
+):
+    """admin tasks on the Solr Db: delete all video instances or test connection"""
+    mongodb_delete_videos()
 
 
 @app.command()
@@ -43,6 +65,7 @@ def mongo_add(
 def solr_add(
     version_id: Annotated[str, typer.Argument(help="version_id of a video")],
 ):
+    """get video from the Mongo DB and add it to Solr"""
     update_solr(version_id)
 
 
@@ -51,6 +74,7 @@ def solr_admin(
     test: Annotated[bool, typer.Option(help="Test Solr Connection")] = False,
     delete: Annotated[bool, typer.Option(help="Delete all documents from Solr")] = False,
 ):
+    """admin tasks on the Solr Db: delete all instances or test connection"""
     if test:
         test_solr_connection()
     if delete:

@@ -7,6 +7,8 @@ DATE_PATTERN = "\d{8}"
 def write_output_to_file(processed_data, output):
     """write parsed video data to a json file"""
     with open(output, 'w', encoding='utf-8') as file:
+        if "_id" in processed_data.keys():
+            processed_data["_id"] = str(processed_data["_id"])
         json.dump(processed_data, file, indent=4)
     print(f"output can be found at {output}")
 
