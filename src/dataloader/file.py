@@ -1,7 +1,7 @@
 import json
 import re
 from datetime import datetime, timezone
-DATE_PATTERN = "\b\d{4}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])\b"
+DATE_PATTERN = "\d{8}"
 
 
 def write_output_to_file(processed_data, output):
@@ -11,11 +11,12 @@ def write_output_to_file(processed_data, output):
     print(f"output can be found at {output}")
 
 
-def extract_iso_date_from_filename(filename: str):
+def extract_iso_date_from_filename(filepath: str):
     """file name is assumed as HRC_20220328.srt"""
+    filename = filepath.split("/")[-1]
     match = re.search(DATE_PATTERN, filename)
     if match:
-        date_part = match.group(1)
+        date_part = match[0]
         date_obj = datetime.strptime(date_part, '%Y%m%d')
         date_obj = date_obj.replace(tzinfo=timezone.utc)
         return date_obj.isoformat()

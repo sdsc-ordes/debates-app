@@ -19,14 +19,17 @@ def mongo_find_one(
 
 
 @app.command()
-def mongo_post(
-    srt_file: str,
+def mongo_add(
+    srt_file: Annotated[str, typer.Argument(help="SRT file as transcription of a video")],
 ):
-    with open('input/input.srt', 'r') as f:
+    """An srt file is parsed and then added to the mongo db as a single document.
+    The video_id that the mongodb generated when inserting the video is returned."""
+    with open(srt_file, 'r') as f:
         data = f.read()
     date = extract_iso_date_from_filename(srt_file)
     processed_data = parse_srt_file(data)
-    mongodb_insert_video(processed_data, date)
+    video_id = mongodb_insert_video(processed_data, date)
+    print(f"video has been successfully added at {video_id}")
 
 
 @app.command()

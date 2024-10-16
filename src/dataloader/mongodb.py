@@ -12,10 +12,11 @@ MONGO_DB = os.getenv("MONGO_DB")
 MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
 
 
-def mongodb_insert_video(data, title):
+def mongodb_insert_video(data, date):
     """Insert one video into the mongodb"""
-    video_data = _get_video_data(data, title)
-    _mongodb_insert_one(video_data)
+    video_data = _get_video_data(data, date)
+    video_id = _mongodb_insert_one(video_data)
+    return video_id
 
 
 def mongodb_find_video(version_id):
@@ -33,12 +34,12 @@ def _mongodb_insert_one(video_data):
         db = client[MONGO_DB]
         video_id = db[MONGO_COLLECTION].insert_one(video_data).inserted_id
         if video_id:
-            print(f"video has been successfully added at {video_id}")
+            return video_id
 
 
-def _get_video_data(data, title):
+def _get_video_data(data, date):
     video_data = {
-        "video_title": title,
+        "date": date,
         "speakers": _get_speakers(data),
         "segments": _get_segments(data),
         "subtitles": _get_subtitles(data),
