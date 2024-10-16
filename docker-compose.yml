@@ -1,4 +1,5 @@
 version: "3.8"
+name: debates
 
 services:
   minio:
@@ -98,6 +99,8 @@ services:
       MONGO_URL: mongodb://localhost:27017/
       MONGO_DB: debates
       MONGO_VIDEO_COLLECTION: videos
+    volumes:
+      - /Users/smaennel/WORK/UNHCR/FRONTEND/political-debates-ui/dataloader:/app
     command: ["/bin/sh"]
 
 networks:
