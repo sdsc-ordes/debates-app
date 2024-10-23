@@ -5,5 +5,5 @@
 	path = frontend
 	url = git@github.com:sdsc-ordes/debates-ui.git
 [submodule "debates-dataloader"]
-	path = debates-dataloader
+	path = dataloader
 	url = git@github.com:sdsc-ordes/debates-dataloader.git
