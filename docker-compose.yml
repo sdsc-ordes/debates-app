@@ -5,13 +5,13 @@ services:
   minio:
     image: quay.io/minio/minio:RELEASE.2022-02-18T01-50-10Z
     volumes:
-      - /Users/smaennel/WORK/UNHCR/volumes/minio:/data
+      - ${MINIO_PATH}:/data
     ports:
       - 9000:9000
       - 9001:9001
     environment:
-      MINIO_ROOT_USER: 'minio_user'
-      MINIO_ROOT_PASSWORD: 'minio_password'
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
       MINIO_ADDRESS: ':9000'
       MINIO_CONSOLE_ADDRESS: ':9001'
     command: minio server /data
@@ -19,30 +19,35 @@ services:
   solr:
     build:
       context: ./solr
-    container_name: debates_solr
     ports:
       - "8983:8983"
     networks:
       - debates_network
+    healthcheck:
+      test: curl --max-time 10 -f http://localhost:8983 || exit 1
+      start_period: 60s
+      interval: 10s
+      timeout: 10s
+      retries: 5
     volumes:
-      - /Users/smaennel/WORK/UNHCR/volumes/solr:/var/solr
+      - ${SOLR_PATH}:/var/solr
     command:
       - solr-precreate
       - debates
       - /opt/solr/server/solr/configsets/debates
 
-  mongodb-instance:
+  mongodb:
     image: mongo:7.0.8
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: test1234
-      MONGO_INITDB_DATABASE: debates
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
     networks:
       - debates_network
     volumes:
-      - /Users/smaennel/WORK/UNHCR/volumes/mongo:/data/db
+      - ${MONGO_PATH}:/data/db
 
   mongodb-express:
     image: mongo-express:1.0.2-18
@@ -50,22 +55,14 @@ services:
       - "8081:8081"
     environment:
       ME_CONFIG_OPTIONS_EDITORTHEME: "ambiance"
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: test1234
-      ME_CONFIG_MONGODB_URL: mongodb://admin:test1234@mongodb-instance:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/
       ME_CONFIG_MONGODB_ENABLE_ADMIN: true
     networks:
       - debates_network
     depends_on:
-      - mongodb-instance
-
-  proxy:
-    build:
-      context: ./proxy
-    networks:
-      - debates_network
-    ports:
-      - "8010:80"
+      - mongodb
 
   frontend:
     build:
@@ -77,12 +74,13 @@ services:
     networks:
       - debates_network
     environment:
-      VITE_SOLR_URL: http://localhost:8010/solr/debates/select
-      VITE_VIDEO_INPUT: "video.mp4"
-      VITE_SUBTITLES_INPUT: "subtitles.srt"
-      VITE_MONGO_URL: mongodb://localhost:27017/
-      VITE_MONGO_DB: debates
-      VITE_MONGO_VIDEO_COLLECTION: videos
+      VITE_SOLR_URL: ${SOLR_SELECT_URL}
+      VITE_VIDEO_INPUT: ${VIDEO_INPUT}
+      VITE_SUBTITLES_INPUT: ${SUBTITLES_INPUT}
+      VITE_MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/
+      VITE_MONGO_DB: ${MONGO_DB}
+      VITE_MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
+    command: ["node", "build"]
 
   dataloader:
     build:
@@ -93,15 +91,24 @@ services:
     networks:
       - debates_network
     environment:
-      SOLR_URL: http://localhost:8010/solr/debates/select
-      VIDEO_INPUT: "video.mp4"
-      SUBTITLES_INPUT: "subtitles.srt"
-      MONGO_URL: mongodb://localhost:27017/
-      MONGO_DB: debates
-      MONGO_VIDEO_COLLECTION: videos
-    volumes:
-      - /Users/smaennel/WORK/UNHCR/FRONTEND/political-debates-ui/dataloader:/app
+      SOLR_URL: ${SOLR_BASE_URL}
+      VIDEO_INPUT: ${VIDEO_INPUT}
+      SUBTITLES_INPUT: ${SUBTITLES_INPUT}
+      MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/
+      MONGO_DB: ${MONGO_DB}
+      MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
     command: ["/bin/sh"]
+
+  proxy:
+    build:
+      context: ./proxy
+    depends_on:
+      solr:
+        condition: service_healthy
+    networks:
+      - debates_network
+    ports:
+      - "8010:80"
 
 networks:
   debates_network:
