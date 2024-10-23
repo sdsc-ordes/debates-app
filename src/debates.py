@@ -5,7 +5,7 @@ from dataloader.mongodb import (
     mongodb_insert_video, mongodb_find_video, mongodb_delete_videos
 )
 from dataloader.file import (
-    write_output_to_file, extract_iso_date_from_filename
+    write_parsed_data_to_file, extract_iso_date_from_filename
 )
 from dataloader.solr import (
     test_solr_connection, update_solr, delete_all_documents_in_solr
@@ -91,8 +91,8 @@ def parse(
     """parses SRT file to json output"""
     with open(srt_file, 'r') as f:
         data = f.read()
-    processed_data = parse_srt_file(data)
-    write_output_to_file(processed_data, output)
+    parsed_data = parse_srt_file(data)
+    write_parsed_data_to_file(parsed_data, output)
 
 
 if __name__ == "__main__":

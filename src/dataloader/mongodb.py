@@ -3,13 +3,12 @@ import os
 import uuid
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from pprint import pprint
 
 load_dotenv()
 
 MONGO_URL = os.getenv("MONGO_URL")
 MONGO_DB = os.getenv("MONGO_DB")
-MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
+MONGO_VIDEO_COLLECTION = os.getenv("MONGO_VIDEO_COLLECTION")
 
 
 def mongodb_insert_video(data, date):
@@ -23,7 +22,7 @@ def mongodb_find_video(version_id):
     """Find videos in the mongodb: currently all videos are returned"""
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        document = db[MONGO_COLLECTION].find_one({
+        document = db[MONGO_VIDEO_COLLECTION].find_one({
             "version_id": version_id,
         })
     return document
@@ -32,7 +31,7 @@ def mongodb_find_video(version_id):
 def _mongodb_insert_one(video_data):
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        video_id = db[MONGO_COLLECTION].insert_one(video_data).inserted_id
+        video_id = db[MONGO_VIDEO_COLLECTION].insert_one(video_data).inserted_id
         if video_id:
             return video_id
 
@@ -40,7 +39,7 @@ def _mongodb_insert_one(video_data):
 def mongodb_delete_videos():
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        db.drop_collection(MONGO_COLLECTION)
+        db.drop_collection(MONGO_VIDEO_COLLECTION)
 
 
 def _get_video_data(data, date):
