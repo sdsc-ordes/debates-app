@@ -1,0 +1,4 @@
+services:
+  dataloader:
+    volumes:
+      - ./dataloader:/app
