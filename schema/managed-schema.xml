@@ -453,15 +453,17 @@
   <field name="_version_" type="plong" indexed="false" stored="false"/>
   <field name="date" type="pdate" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
-  <field name="segment_id" type="pint" uninvertible="false" docValues="false" indexed="true" stored="true"/>
+  <field name="segment_nr" type="pint" uninvertible="false" docValues="false" indexed="true" stored="true" multiValued="false"/>
+  <field name="session" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
+  <field name="topic" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="speaker_name" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="speaker_role" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
-  <field name="countries" type="string" uninvertible="false" docValues="true" multiValued="true" indexed="true" stored="true"/>
+  <field name="speaker_country" type="string" uninvertible="false" docValues="true" multiValued="false" indexed="true" stored="true"/>
   <field name="statement" type="text_en" uninvertible="true" multiValued="true" indexed="true" stored="true"/>
   <field name="start" type="pfloat" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="end" type="pfloat" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="time_end" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
-  <field name="time_start" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>  
+  <field name="time_start" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <dynamicField name="*_txt_en_split_tight" type="text_en_splitting_tight" indexed="true" stored="true"/>
   <dynamicField name="*_descendent_path" type="descendent_path" indexed="true" stored="true"/>
   <dynamicField name="*_ancestor_path" type="ancestor_path" indexed="true" stored="true"/>
