@@ -456,6 +456,7 @@
   <field name="segment_nr" type="pint" uninvertible="false" docValues="false" indexed="true" stored="true" multiValued="false"/>
   <field name="session" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="topic" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
+  <field name="speaker_id" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="speaker_name" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="speaker_role" type="string" uninvertible="false" docValues="true" indexed="true" stored="true"/>
   <field name="speaker_country" type="string" uninvertible="false" docValues="true" multiValued="false" indexed="true" stored="true"/>
