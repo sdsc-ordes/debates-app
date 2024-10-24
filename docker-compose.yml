@@ -75,12 +75,12 @@ services:
     networks:
       - debates_network
     environment:
-      VITE_SOLR_URL: ${SOLR_SELECT_URL}
-      VITE_VIDEO_INPUT: ${VIDEO_INPUT}
-      VITE_SUBTITLES_INPUT: ${SUBTITLES_INPUT}
-      VITE_MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
-      VITE_MONGO_DB: ${MONGO_DB}
-      VITE_MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
+      PUBLIC_SOLR_URL: ${SOLR_SELECT_URL}
+      PUBLIC_VIDEO_INPUT: ${VIDEO_INPUT}
+      PUBLIC_SUBTITLES_INPUT: ${SUBTITLES_INPUT}
+      SECRET_MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
+      SECRET_MONGO_DB: ${MONGO_DB}
+      PUBLIC_MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
     command: ["node", "build"]
 
   dataloader:
@@ -108,6 +108,8 @@ services:
       - debates_network
     ports:
       - "8010:80"
+    environment:
+      - SOLR_URL=http://solr:8983/solr
 
 networks:
   debates_network:
