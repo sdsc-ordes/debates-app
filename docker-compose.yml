@@ -108,6 +108,8 @@ services:
       - debates_network
     ports:
       - "8010:80"
+    environment:
+      - SOLR_URL=http://solr:8983/solr
 
 networks:
   debates_network:
