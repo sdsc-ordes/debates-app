@@ -45,6 +45,8 @@ def mongodb_delete_videos():
 def _get_video_data(data, date):
     video_data = {
         "date": date,
+        "session": "",
+        "topic": "",
         "speakers": _get_speakers(data),
         "segments": _get_segments(data),
         "subtitles": _get_subtitles(data),
