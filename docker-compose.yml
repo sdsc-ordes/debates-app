@@ -36,7 +36,7 @@ services:
       - debates
       - /opt/solr/server/solr/configsets/debates
 
-  mongodb:
+  mongodb-instance:
     image: mongo:7.0.8
     ports:
       - "27017:27017"
@@ -57,12 +57,12 @@ services:
       ME_CONFIG_OPTIONS_EDITORTHEME: "ambiance"
       ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       ME_CONFIG_MONGODB_ENABLE_ADMIN: true
     networks:
       - debates_network
     depends_on:
-      - mongodb
+      - mongodb-instance
 
   frontend:
     build:
@@ -71,13 +71,14 @@ services:
       - "3000:3000"
     depends_on:
       - solr
+      - mongodb-instance
     networks:
       - debates_network
     environment:
       VITE_SOLR_URL: ${SOLR_SELECT_URL}
       VITE_VIDEO_INPUT: ${VIDEO_INPUT}
       VITE_SUBTITLES_INPUT: ${SUBTITLES_INPUT}
-      VITE_MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/
+      VITE_MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       VITE_MONGO_DB: ${MONGO_DB}
       VITE_MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
     command: ["node", "build"]
@@ -92,9 +93,7 @@ services:
       - debates_network
     environment:
       SOLR_URL: ${SOLR_BASE_URL}
-      VIDEO_INPUT: ${VIDEO_INPUT}
-      SUBTITLES_INPUT: ${SUBTITLES_INPUT}
-      MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/
+      MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       MONGO_DB: ${MONGO_DB}
       MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
     command: ["/bin/sh"]
