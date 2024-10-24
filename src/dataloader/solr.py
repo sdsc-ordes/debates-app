@@ -37,13 +37,17 @@ def delete_all_documents_in_solr():
 
 def _map_video_data(video_data):
     subtitles = video_data.get("subtitles")
-    segments = [_map_segment(segment, subtitles)
+    video_date = video_data["date"]
+    segments = [_map_segment(segment, subtitles, video_date)
                 for segment in video_data["segments"]]
     return segments
 
 
-def _map_segment(segment, subtitles):
+def _map_segment(segment, subtitles, video_date):
     segment["statement"] = [
         subtitle["content"]
         for subtitle in subtitles[segment["first_index"]:segment["last_index"]]]
+    del segment["first_index"]
+    del segment["last_index"]
+    segment["date"] = video_date
     return segment
