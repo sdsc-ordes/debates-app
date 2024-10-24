@@ -3,7 +3,7 @@ FROM python:3.11-slim
 RUN pip install uv
 
 WORKDIR /app
-COPY requirements.lock pyproject.toml README.md ./
+COPY requirements.lock pyproject.toml README.md input ./
 
 RUN uv pip install --no-cache --system -r requirements.lock
 
