@@ -31,7 +31,9 @@ def mongodb_find_video(version_id):
 def _mongodb_insert_one(video_data):
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        video_id = db[MONGO_VIDEO_COLLECTION].insert_one(video_data).inserted_id
+        video_id = db[MONGO_VIDEO_COLLECTION].insert_one(
+            video_data
+        ).inserted_id
         if video_id:
             return video_id
 
@@ -50,7 +52,7 @@ def _get_video_data(data, date):
         "speakers": _get_speakers(data),
         "segments": _get_segments(data),
         "subtitles": _get_subtitles(data),
-        "video_s3_id": str(uuid.uuid4()),
+        "video_id": str(uuid.uuid4()),
         "version_id": str(uuid.uuid4()),
     }
     return video_data
