@@ -78,8 +78,9 @@ def _get_speakers(data):
     speaker_ids = {subtitle["speaker_id"] for subtitle in data}
     speakers = [{
         "speaker_id": speaker_id,
-        "name": "",
-        "country": "",
+        "speaker_name": "",
+        "speaker_country": "",
+        "speaker_role": "",
     } for speaker_id in speaker_ids]
     return speakers
 
