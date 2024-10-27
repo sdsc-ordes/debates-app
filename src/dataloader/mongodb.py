@@ -11,6 +11,11 @@ MONGO_DB = os.getenv("MONGO_DB")
 MONGO_VIDEO_COLLECTION = os.getenv("MONGO_VIDEO_COLLECTION")
 
 
+def mongodb_test_connection():
+    with MongoClient(MONGO_URL, serverSelectionTimeoutMS = 2000) as client:
+        return client.server_info()
+
+
 def mongodb_insert_video(data, date):
     """Insert one video into the mongodb"""
     video_data = _get_video_data(data, date)
