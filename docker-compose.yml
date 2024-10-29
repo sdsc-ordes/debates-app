@@ -135,6 +135,12 @@ services:
         source: ./nginx/nginx.conf
         target: /etc/nginx/conf.d/default.conf
         read_only: true
+    secrets:
+      - htpasswd
+
+secrets:
+  htpasswd:
+    file: /etc/apache2/.htpasswd
 
 networks:
   debates_network:
