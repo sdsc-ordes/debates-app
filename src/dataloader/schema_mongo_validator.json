@@ -1,0 +1,137 @@
+{
+    "collection": "videos",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "title": "Video Object Validation",
+        "required": [
+          "_id",
+          "version_id"
+        ],
+        "properties": {
+          "s3_name": {
+            "bsonType": "string",
+            "description": "name in S3 corresponding to prefix without dash"
+          },
+          "version_id": {
+            "bsonType": "string",
+            "description": "Version of the metadata"
+          },
+          "created_at": {
+            "bsonType": "timestamp",
+            "description": "Date as an timezone iso date"
+          },
+          "debate": {
+            "description": "Metadata on the debate",
+            "bsonType": "object",
+            "properties": {
+              "session": {
+                "bsonType": "string",
+                "description": "Session title of the debate"
+              },
+              "bsonType": {
+                "bsonType": "string",
+                "description": "Topic of the Debate"
+              },
+              "date": {
+                "bsonType": "date",
+                "description": "Date as iso date with timezone"
+              },
+              "topic": {
+                "bsonType": "string",
+                "description": "Topic of the Debate"
+              },
+              "public": {
+                "bsonType": "bool",
+                "description": "Indicates public or private debate"
+              }
+            }
+          },
+          "speakers": {
+            "description": "Speakers",
+            "bsonType": "array",
+            "items": {
+              "bsonType": "object",
+              "properties": {
+                "speaker_id": {
+                  "bsonType": "string",
+                  "description": "unique id for the speaker in the debate"
+                },
+                "name": {
+                  "bsonType": "string",
+                  "description": "name of the speaker"
+                },
+                "role": {
+                  "bsonType": "string",
+                  "description": "role of the speaker in the debate if any",
+                  "enum": ["chair", "speaker"]
+                },
+                "country": {
+                  "bsonType": "string",
+                  "description": "country that the speaker represents if any"
+                }
+              }
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "segments": {
+            "description": "Segments",
+            "bsonType": "array",
+            "items": {
+              "bsonType": "object",
+              "properties": {
+                "segment_nr": {
+                  "bsonType": "int",
+                  "description": "segment number in debate starting at one"
+                },
+                "start": {
+                  "bsonType": "decimal",
+                  "description": "start time in seconds"
+                },
+                "end": {
+                  "bsonType": "decimal",
+                  "description": "end time in seconds"
+                },
+                "speaker_id": {
+                  "bsonType": "string",
+                  "description": "id of the speaker that speaks at the segment"
+                }
+              }
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "subtitles": {
+            "description": "subtitles",
+            "bsonType": "array",
+            "items": {
+              "bsonType": "object",
+              "properties": {
+                "index": {
+                  "bsonType": "int",
+                  "description": "index starting at 1"
+                },
+                "start": {
+                  "bsonType": "decimal",
+                  "description": "start time in seconds"
+                },
+                "end": {
+                  "bsonType": "decimal",
+                  "description": "end time in seconds"
+                },
+                "segment_nr": {
+                  "bsonType": "int",
+                  "description": "segment_nr the subtile belongs to"
+                }
+              },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "validationLevel": "strict",
+    "validationAction": "warning"
+    }
+  }
