@@ -24,7 +24,7 @@ class s3Manager:
         self.s3.head_bucket(Bucket=self.bucket_name)
         print("connection to s3 established")
 
-    def list_objects(self):
+    def list_videos(self):
         response = self.s3.list_objects_v2(
             Bucket=self.bucket_name,
             Delimiter='/'
@@ -34,9 +34,36 @@ class s3Manager:
             for prefix in response['CommonPrefixes']:
                 folders.append(prefix['Prefix'])
         print(folders)
+        for folder in folders:
+            result = self.s3.list_objects(Bucket=self.bucket_name, Prefix=folder, Delimiter='/')
+            import pdb; pdb.set_trace()
+            for o in result.get('CommonPrefixes'):
+                print(f"sub folder : {o.get('Prefix')}")
 
-    def get_srt_file_for_object(self, s3_path):
-        object_key = f"{s3_path}/{s3_path}.srt"
-        response = self.s3.get_object(Bucket=self.bucket_name, Key=object_key)
+    def get_keys_for_s3_name(self, s3_name):
+        video_prefix = f"{s3_name}/"
+        keys = []
+        result = self.s3.list_objects(
+            Bucket=self.bucket_name, Prefix=video_prefix, Delimiter='/'
+        )
+        for item in result.get('Contents', []):
+            keys.append(item.get("Key"))
+        return keys
+
+    def get_srt_file_for_object(self, s3_name):
+        keys = self.get_keys_for_s3_name(s3_name)
+        srt_keys = [k for k in keys if k.endswith(".srt")]
+        if srt_keys:
+            srt_key = srt_keys[0]
+        response = self.s3.get_object(Bucket=self.bucket_name, Key=srt_key)
         srt_data = response['Body'].read().decode('utf-8')
         return srt_data
+
+    def get_metadata_for_object(self, s3_name):
+        keys = self.get_keys_for_s3_name(s3_name)
+        yml_keys = [k for k in keys if k.endswith(".yml")]
+        if yml_keys:
+            yml_key = yml_keys[0]
+        response = self.s3.get_object(Bucket=self.bucket_name, Key=yml_key)
+        metadata = response['Body'].read().decode('utf-8')
+        return metadata
