@@ -1,14 +1,14 @@
 import re
-from srt import parse
+from srt import parse as ext_srt_parse
 
 
 class SrtParseException(Exception):
     pass
 
 
-def parse_srt_file(data):
+def parse_subtitles(data):
     """parse srt file into a subtitle dictionary"""
-    subtitles_raw = parse(data)
+    subtitles_raw = ext_srt_parse(data)
     subtitles_processed = []
     segment_nr = 0
     speaker_id = None
