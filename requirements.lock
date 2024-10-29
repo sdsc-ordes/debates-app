@@ -49,6 +49,8 @@ python-dateutil==2.9.0.post0
     # via botocore
 python-dotenv==1.0.1
     # via srt-dataloader
+pytz==2024.2
+    # via srt-dataloader
 pyyaml==6.0.2
     # via srt-dataloader
 referencing==0.35.1
