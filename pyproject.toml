@@ -14,6 +14,7 @@ dependencies = [
     "pysolr>=3.10.0",
     "boto3>=1.35.49",
     "jsonschema>=4.23.0",
+    "pyyaml>=6.0.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.11"
