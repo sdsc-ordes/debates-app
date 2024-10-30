@@ -1,6 +1,6 @@
 import typer
 import traceback
-import sys
+from pprint import pprint
 from datetime import datetime
 import dataloader.srt_parser as dl_parse_srt
 import dataloader.yml_parser as dl_parse_yml
@@ -16,20 +16,22 @@ app = typer.Typer()
 
 @app.command()
 def s3_to_mongo(
-    s3_name: Annotated[str, typer.Argument(help="name of video object in s3 (prefix without dash)")],
+    srt_path: Annotated[str, typer.Argument(help="s3 srt file path")],
+    metadata_path: Annotated[str, typer.Argument(help="s3 metadata path")],
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
+    dev: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
     """get video srt file from S3 and add it to the Mongo DB after parsing it"""
     try:
-        s3 = s3Manager()
-        raw_data = s3.get_srt_file_for_object(s3_name)
+        s3 = s3Manager(dev)
+        raw_data = s3.get_s3_data(srt_path)
         parsed_data = dl_parse_srt.parse_subtitles(raw_data)
-        raw_metadata = s3.get_metadata_for_object(s3_name)
+        raw_metadata = s3.get_s3_data(metadata_path)
         parsed_metadata = dl_parse_yml.parse_metadata(raw_metadata)
         video_id = dl_mongo.mongodb_insert_video(parsed_data, parsed_metadata)
         print(f"video has been successfully added at {video_id}")
     except Exception as e:
-        print(f"S3 data for path {s3_name} could not be fetched. An exception occurred: {e}")
+        print(f"S3 data could not be loaded to mongodb. An exception occurred: {e}")
         _print_traceback(debug)
 
 
@@ -132,32 +134,35 @@ def solr_admin(
 def s3_admin(
     test: Annotated[bool, typer.Option(help="Test S3 Connection")] = False,
     list: Annotated[bool, typer.Option(help="List S3 Objects")] = False,
-    video: Annotated[str, typer.Option(help="List Objects for a video prefix")] = None,
+    prefix: Annotated[str, typer.Option(help="List Objects for a prefix")] = "",
+    path: Annotated[str, typer.Option(help="Get data for a path")] = "",
+    dev: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
+    print: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
     if test:
         try:
-            s3 = s3Manager()
+            s3 = s3Manager(dev)
             s3.test_connection()
         except Exception as e:
             print(f"S3 connection could not be established. An exception occurred: {e}")
             _print_traceback(debug)
     if list:
         try:
-            s3 = s3Manager()
-            s3.list_videos()
+            s3 = s3Manager(dev)
+            s3.list_bucket_content(prefix)
         except Exception as e:
             print(f"S3 video objects could not be listed. An exception occurred: {e}")
             _print_traceback(debug)
-    if video:
+    if path:
         try:
-            s3 = s3Manager()
-            keys = s3.get_keys_for_s3_name(video)
-            print(keys)
+            s3 = s3Manager(dev)
+            data = s3.get_s3_data(path)
+            if print:
+                print(data)
         except Exception as e:
-            print(f"S3 file keys for video {video} could not be listed. An exception occurred: {e}")
+            print(f"S3 video objects could not be listed. An exception occurred: {e}")
             _print_traceback(debug)
-
 
 def _print_traceback(debug):
     if debug:
