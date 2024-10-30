@@ -1,55 +1,84 @@
 # Political Debates UI
 
-## Setup docker compose
+## About
 
-User Interface for political debates with Solr and Sveltekit
+This is the GUI setup with docker compose for the political debates project
+It contains the following services
 
-```
-docker-compose build --no-cache
-docker-compose up -d --force-recreate
-```
+- S3: store for the original data
+- Mongodb: store for metadata derived from the original data
+- Solr: search engine that is fed with the latest derived metadata version from the mongodb
+- Mongo Express as convenient UI for the mongodb
+- Dataloader: loads the original data into both Mongodb and Solr
+- Frontend: frontend in Sveltekit, that has a videoplayer page and a search page: the videoplayer page allows to play videos along with their transcripts and edit transcripts and speaker info, that can be stored back to the mongodb as a new version of the metadata
 
-Check that Solr is up and that the core `debates` was created.
+## Docker compose setup
 
-## Load the data
+### Environment variables
 
-### Process the data
+The compose setup needs a `.env` file for secrets:
 
-
-### Load the data into Solr
-
-Make sure the data is expected in the directory `data/solr` that is mounted 
-by the docker compose into `debates_solr/data` on the solr docker container
-
-
-Load data on demand:
-
-```
-docker-compose exec solr post -c debates /debates_solr/data
+```bash
+cp .env.dist .env
 ```
 
-In case you want to reload data in Solr (which needed on a schema change): 
+Then provide the following information in the `.env` file:
 
-- Delete data: Go to the Solr Ui: go to documents and enter as xml:
+```bash
+# SOLR settings
+SOLR_SELECT_URL=http://proxy:8010/solr/debates/select
+SOLR_BASE_URL=http://proxy:80/solr/debates/
+SOLR_PATH=[your-path-to-solr-volume]
+
+# Mongo Settings
+MONGO_DB=debates
+MONGO_VIDEO_COLLECTION=videos
+MONGO_USER=[your-mongo-user]
+MONGO_PASSWORD=[your-mongo-password]
+MONGO_PATH=[your-path-to-mongo-volume]
+
+# Mongo Express Settings
+MONGO_EXPRESS_USER=admin
+MONGO_EXPRESS_PASSWORD=test1234
+
+# Minio Settings
+S3_BUCKET_NAME=debates
+S3_ACCESS_KEY=[your-minio-user]
+S3_SECRET_KEY=[your-minio-password]
+MINIO_PATH=[your-path-to-minio-volume]
+
+# Input Files
+VIDEO_INPUT="HRC_20220328.mp4"
+SUBTITLES_INPUT="HRC_20220328.srt"
+```
+
+### Compose for dev and prod
+
+There are three docker compose files:
+
+- docker-compose.yml: common setup for dev and prod
+- docker-compose.dev.yml: setup for dev
+- docker-compose.prod.yml: setup for prod
+
+Setup dev environment:
 
 ```
-<delete><query>*:*</query></delete>
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml build
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
-Afterwards load the data again as described above.
+Set up on VM for publicly available prototype:
 
-### Prepare the data for Solr
+```
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml build
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
 
-See https://github.com/sdsc-ordes/pyvideotranscripts.git: set up the project as described there and run the script to parse the SRT Transcripts of the video. The output is for now copied manually into the `data/solr` folder of this repo. 
+### Loading data
 
-### Frontend development
+Once the containers are running: you need to go into the dataloader container and load the data into mongodb and s3 initially. Once set up the date will be retained in the volumes.
 
-Once the Solr and proxy are up in the docker compose, the Frontend can als be developed locally: see https://github.com/sdsc-ordes/debates-ui.git
+## TODOS:
 
-The video and transcripts for the frontend are expected at `frontend/static/input/video.mp4` and `frontend/static/input/subtitles.srt`.
-
-## TODO
-
-- generalize the data location
-- provide solr url as an enviroment variable
-- remove hard coding of inputs
+- [ ] TODO: Describe dataloading once it is repaired
+- [ ] stream video from S3 and don't add it as an environment variable
