@@ -115,32 +115,6 @@ services:
     environment:
       - SOLR_URL=http://solr:8983/solr
 
-  reverse-proxy:
-    image: nginx:alpine
-    networks:
-      - debates_network
-    ports:
-      - "443:443"
-      - "80:80"
-    volumes:
-      - type: bind
-        source: /etc/letsencrypt/archive/debates.swisscustodian.ch/cert1.pem
-        target: /etc/nginx/ssl/debates.swisscustodian.ch.cert
-        read_only: true
-      - type: bind
-        source: ./nginx/nginx.conf
-        target: /etc/nginx/conf.d/default.conf
-        read_only: true
-    secrets:
-      - htpasswd
-      - ssl_private_key
-
-secrets:
-  htpasswd:
-    file: /etc/apache2/.htpasswd
-  ssl_private_key:
-    file: /etc/letsencrypt/archive/debates.swisscustodian.ch/privkey1.pem
-
 networks:
   debates_network:
     driver: bridge
