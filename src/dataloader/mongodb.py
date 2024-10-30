@@ -40,8 +40,6 @@ def mongodb_create_video_collection_with_schema():
 def mongodb_insert_video(data, metadata):
     """Insert one video into the mongodb"""
     video_data = _get_video_data(data, metadata)
-    pprint(video_data["debate"])
-    print(video_data["created_at"])
     video_id = _mongodb_insert_one(video_data)
     return video_id
 
