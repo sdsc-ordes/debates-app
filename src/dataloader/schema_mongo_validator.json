@@ -18,8 +18,8 @@
             "description": "Version of the metadata"
           },
           "created_at": {
-            "bsonType": "timestamp",
-            "description": "Date as an timezone iso date"
+            "bsonType": "date",
+            "description": "Datetime when the collection item was created"
           },
           "debate": {
             "description": "Metadata on the debate",
@@ -33,9 +33,9 @@
                 "bsonType": "string",
                 "description": "Topic of the Debate"
               },
-              "date": {
+              "schedule": {
                 "bsonType": "date",
-                "description": "Date as iso date with timezone"
+                "description": "Date when the debate took place"
               },
               "topic": {
                 "bsonType": "string",
@@ -64,11 +64,11 @@
                 "role": {
                   "bsonType": "string",
                   "description": "role of the speaker in the debate if any",
-                  "enum": ["chair", "speaker"]
+                  "enum": ["chair", "speaker", ""]
                 },
                 "country": {
                   "bsonType": "string",
-                  "description": "country that the speaker represents if any"
+                  "description": "country that the speaker represents if any in this debate"
                 }
               }
             },
@@ -86,11 +86,11 @@
                   "description": "segment number in debate starting at one"
                 },
                 "start": {
-                  "bsonType": "decimal",
+                  "bsonType": "double",
                   "description": "start time in seconds"
                 },
                 "end": {
-                  "bsonType": "decimal",
+                  "bsonType": "double",
                   "description": "end time in seconds"
                 },
                 "speaker_id": {
@@ -113,11 +113,11 @@
                   "description": "index starting at 1"
                 },
                 "start": {
-                  "bsonType": "decimal",
+                  "bsonType": "double",
                   "description": "start time in seconds"
                 },
                 "end": {
-                  "bsonType": "decimal",
+                  "bsonType": "double",
                   "description": "end time in seconds"
                 },
                 "segment_nr": {
@@ -130,8 +130,6 @@
           }
         }
       }
-    },
-    "validationLevel": "strict",
-    "validationAction": "warning"
     }
   }
+}
