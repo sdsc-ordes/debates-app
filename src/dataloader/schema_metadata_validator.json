@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "properties": {
+    "video": {
+      "type": "object",
+      "properties": {
+        "filename": { "type": "string" }
+      },
+      "required": ["filename"]
+    },
+    "transcripts": {
+      "type": "object",
+      "properties": {
+        "filename": { "type": "string" },
+        "diarized": { "type": "boolean" }
+      },
+      "required": ["filename", "diarized"]
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "topic": { "type": "string" },
+        "session": { "type": "string" },
+        "public": { "type": "boolean" }
+      },
+      "required": ["type", "topic", "session", "public"]
+    },
+    "schedule": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "time": {
+          "type": "string",
+          "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "timezone": { "type": "string" }
+      },
+      "required": ["date", "time", "timezone"]
+    }
+  },
+  "required": ["video", "transcripts", "context", "schedule"]
+}

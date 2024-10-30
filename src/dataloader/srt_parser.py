@@ -1,14 +1,17 @@
 import re
-from srt import parse
+from srt import parse as ext_srt_parse
 
 
-def parse_srt_file(data):
+class SrtParseException(Exception):
+    pass
+
+
+def parse_subtitles(data):
     """parse srt file into a subtitle dictionary"""
-    subtitles_raw = parse(data)
+    subtitles_raw = ext_srt_parse(data)
     subtitles_processed = []
     segment_nr = 0
     speaker_id = None
-
     for subtitle in subtitles_raw:
         subtitle_dict = _process_subtitle(subtitle)
         current_speaker_id = subtitle_dict["speaker_id"]
@@ -41,3 +44,4 @@ def _get_speaker(content):
         speaker_id = match.group(1)
         content = match.group(2)
         return speaker_id, content
+    raise SrtParseException("No speakers in transcript")

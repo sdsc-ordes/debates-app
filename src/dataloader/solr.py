@@ -4,7 +4,7 @@ import json
 import requests
 from pysolr import Solr
 from dotenv import load_dotenv
-from dataloader.mongodb import  mongodb_find_video
+import dataloader.mongodb as dl_mongo
 
 load_dotenv()
 
@@ -24,7 +24,7 @@ def test_solr_connection():
 
 def update_solr(version_id):
     solr = Solr(SOLR_URL, always_commit=True)
-    video_data = mongodb_find_video(version_id)
+    video_data = dl_mongo.mongodb_find_video(version_id)
     documents = _map_video_data(video_data)
     print(documents[0])
     solr.add(documents)
