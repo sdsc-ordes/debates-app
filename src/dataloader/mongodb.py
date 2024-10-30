@@ -3,8 +3,11 @@ import os
 import uuid
 import importlib.resources as resources
 from datetime import datetime, timezone
-
-
+import pytz
+from pprint import pprint
+from bson import Timestamp
+import bson
+from bson import datetime as bson_datetime
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -37,6 +40,8 @@ def mongodb_create_video_collection_with_schema():
 def mongodb_insert_video(data, metadata):
     """Insert one video into the mongodb"""
     video_data = _get_video_data(data, metadata)
+    pprint(video_data["debate"])
+    print(video_data["created_at"])
     video_id = _mongodb_insert_one(video_data)
     return video_id
 
@@ -73,11 +78,10 @@ def mongodb_find_video_by_prefix_and_version(video_s3_prefix, version_id):
 def _mongodb_insert_one(video_data):
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        mongo_id = db[MONGO_VIDEO_COLLECTION].insert_one(
+        result = db[MONGO_VIDEO_COLLECTION].insert_one(
             video_data
         ).inserted_id
-        if mongo_id:
-            return mongo_id
+        pprint(result)
 
 
 def mongodb_delete_videos():
@@ -108,7 +112,7 @@ def _get_list_from_cursor(cursor):
 
 def _get_debate(metadata):
     debate = {
-      "date": metadata["context"]["date"],
+      "schedule": _transform_schedule_into_isodate(metadata["schedule"]),
       "type": metadata["context"]["type"],
       "session": metadata["context"]["session"],
       "topic": metadata["context"]["topic"],
@@ -147,6 +151,7 @@ def _get_segments(data):
         segments.append(segment)
     return segments
 
+
 def _get_segment(data, segment_nr):
     subtitles_in_segment = [
         subtitle for subtitle in data if subtitle["segment_nr"] == segment_nr
@@ -162,3 +167,12 @@ def _get_segment(data, segment_nr):
         "segment_nr": segment_nr,
     }
     return segment
+
+
+def _transform_schedule_into_isodate(schedule):
+    datetime_str = f"{schedule['date']} {schedule['time']}"
+    naive_datetime = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M")
+    timezone_obj = pytz.timezone(schedule["timezone"])
+    localized_datetime = timezone_obj.localize(naive_datetime)
+    utc_datetime = localized_datetime.astimezone(pytz.UTC)
+    return utc_datetime
