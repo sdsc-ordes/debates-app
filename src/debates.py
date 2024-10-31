@@ -1,7 +1,6 @@
 import typer
 import traceback
 from pprint import pprint
-from datetime import datetime
 import dataloader.srt_parser as dl_parse_srt
 import dataloader.yml_parser as dl_parse_yml
 import dataloader.mongodb as dl_mongo
@@ -16,17 +15,17 @@ app = typer.Typer()
 
 @app.command()
 def s3_to_mongo(
-    srt_path: Annotated[str, typer.Argument(help="s3 srt file path")],
-    metadata_path: Annotated[str, typer.Argument(help="s3 metadata path")],
+    s3_srt_path: Annotated[str, typer.Argument(help="s3 srt file path")],
+    s3_yml_path: Annotated[str, typer.Argument(help="s3 metadata path")],
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
-    dev: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
+    prod: Annotated[bool, typer.Option(help="Use Production S3 instance")] = False,
 ):
-    """get video srt file from S3 and add it to the Mongo DB after parsing it"""
+    """Get data and metadata for s3_path from S3 and add it to the Mongo DB"""
     try:
-        s3 = s3Manager(dev)
-        raw_data = s3.get_s3_data(srt_path)
+        s3 = s3Manager(prod)
+        raw_data = s3.get_s3_data(s3_srt_path)
         parsed_data = dl_parse_srt.parse_subtitles(raw_data)
-        raw_metadata = s3.get_s3_data(metadata_path)
+        raw_metadata = s3.get_s3_data(s3_yml_path)
         parsed_metadata = dl_parse_yml.parse_metadata(raw_metadata)
         video_id = dl_mongo.mongodb_insert_video(parsed_data, parsed_metadata)
         print(f"video has been successfully added at {video_id}")
@@ -36,6 +35,20 @@ def s3_to_mongo(
 
 
 @app.command()
+def mongo_to_solr(
+    s3_prefix: Annotated[str, typer.Argument(help="s3 prefix of a video")],
+    version_id: Annotated[str, typer.Argument(help="version_id of a video")],
+    debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
+):
+    """Get document from mongodb and add it to Solr"""
+    try:
+        video_data = dl_mongo.mongodb_find_one_video(s3_prefix, version_id)
+        dl_solr.update_solr(video_data)
+    except Exception as e:
+        print(f"An error occurred during mongo to solr: {e}")
+        _print_traceback(debug)
+
+@app.command()
 def parse(
     srt_file: Annotated[str, typer.Argument(help="SRT file as transcription of a video")],
     output: Annotated[str, typer.Option(
@@ -43,7 +56,7 @@ def parse(
     )],
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
-    """parses SRT file to json output"""
+    """parses SRT file to json output file"""
     try:
         with open(srt_file, 'r') as f:
             data = f.read()
@@ -56,20 +69,25 @@ def parse(
 
 @app.command()
 def mongo_get(
-    version_id: Annotated[str, typer.Argument(help="version_id of a video")] = None,
-    s3_prefix: Annotated[str, typer.Argument(help="s3 prefix of a video without the dash")] = None,
-    output: Annotated[str, typer.Option(
-        help="Output path: when provide the output will be written to a file"
-    )] = None,
+    version_id: Annotated[str, typer.Option(help="version_id of video data")] = None,
+    s3_prefix: Annotated[str, typer.Option(help="s3 prefix of video data")] = None,
+    all: Annotated[bool, typer.Option(help="List all videos in the video collection")] = False,
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
-    """find a video by its version_id in the mongo db"""
+    """Find data in Mongodb: you may use s3_prefix and version_id to filter"""
     try:
-        video_data = dl_mongo.mongodb_find(version_id, s3_prefix)
-        if video_data:
-            dl_file.write_output_to_file(video_data, output)
-        else:
-            print(f"No video has not been found.")
+        if all:
+            video_data = dl_mongo.mongodb_find_videos()
+            if video_data:
+                pprint(video_data)
+            else:
+                print(f"No video item has not been found.")
+        if s3_prefix and version_id:
+            video_data = dl_mongo.mongodb_find_one_video(s3_prefix, version_id)
+            if video_data:
+                print(f"Found video for s3_prefix {video_data['s3_prefix']} and version_id {video_data['version_id']}")
+            else:
+                print(f"No video has not been found for s3_prefix {video_data['s3_prefix']} and version_id {video_data['version_id']}.")
     except Exception as e:
         print(f"An error occurred for mongodb find: {e}")
         _print_traceback(debug)
@@ -77,35 +95,29 @@ def mongo_get(
 
 @app.command()
 def mongo_admin(
-    delete: Annotated[bool, typer.Option(help="Delete all documents from Solr")] = False,
-    create: Annotated[bool, typer.Option(help="Delete all documents from Solr")] = False,
     test: Annotated[bool, typer.Option(help="Test Mongodb Connection")] = False,
+    create: Annotated[bool, typer.Option(help="Create Mongodb collection with validation schema")] = False,
+    delete: Annotated[bool, typer.Option(help="Delete all documents from Mongodb collection")] = False,
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
-    """admin tasks on the Solr Db: delete all video instances or test connection"""
-    if delete:
-        try:
-            dl_mongo.mongodb_delete_videos()
-        except Exception as e:
-            print(f"An error for deleting videos from mongodb: {e}")
-            _print_traceback(debug)
+    """Test Mongodb connection, Delete all data from Mongodb, Create Collection with Schema"""
     if test:
         try:
             dl_mongo.mongodb_test_connection()
         except Exception as e:
             print(f"An error occurred for mongodb connection: {e}")
             _print_traceback(debug)
-    if list:
+    if delete:
         try:
-            dl_mongo.mongodb_find_videos()
+            dl_mongo.mongodb_delete_videos()
         except Exception as e:
-            print(f"An error occurred when listing videos from mongodb: {e}")
+            print(f"An error for deleting videos from mongodb: {e}")
             _print_traceback(debug)
     if create:
         try:
             dl_mongo.mongodb_create_video_collection_with_schema()
         except Exception as e:
-            print(f"An error occurred when listing videos from mongodb: {e}")
+            print(f"An error occurred when creating collection with schema validation on mongodb: {e}")
             _print_traceback(debug)
 
 
@@ -115,7 +127,7 @@ def solr_admin(
     delete: Annotated[bool, typer.Option(help="Delete all documents from Solr")] = False,
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
-    """admin tasks on the Solr Db: delete all instances or test connection"""
+    """Test Solr Connection, Delete all data from Solr"""
     if test:
         try:
             dl_solr.test_solr_connection()
@@ -133,35 +145,35 @@ def solr_admin(
 @app.command()
 def s3_admin(
     test: Annotated[bool, typer.Option(help="Test S3 Connection")] = False,
-    list: Annotated[bool, typer.Option(help="List S3 Objects")] = False,
+    list: Annotated[bool, typer.Option(help="List S3 objects")] = False,
     prefix: Annotated[str, typer.Option(help="List Objects for a prefix")] = "",
     path: Annotated[str, typer.Option(help="Get data for a path")] = "",
-    dev: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
-    print: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
+    prod: Annotated[bool, typer.Option(help="Use production S3")] = False,
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
+    """Test S3 connection, list data on S3, get data by s3_path
+    """
     if test:
         try:
-            s3 = s3Manager(dev)
+            s3 = s3Manager(prod)
             s3.test_connection()
         except Exception as e:
             print(f"S3 connection could not be established. An exception occurred: {e}")
             _print_traceback(debug)
     if list:
         try:
-            s3 = s3Manager(dev)
+            s3 = s3Manager(prod)
             s3.list_bucket_content(prefix)
         except Exception as e:
-            print(f"S3 video objects could not be listed. An exception occurred: {e}")
+            print(f"The S3 objects could not be listed. An exception occurred: {e}")
             _print_traceback(debug)
     if path:
         try:
-            s3 = s3Manager(dev)
+            s3 = s3Manager(prod)
             data = s3.get_s3_data(path)
-            if print:
-                print(data)
+            print(data)
         except Exception as e:
-            print(f"S3 video objects could not be listed. An exception occurred: {e}")
+            print(f"The date for s3 path {path} could not be retrieved. An exception occurred: {e}")
             _print_traceback(debug)
 
 def _print_traceback(debug):
