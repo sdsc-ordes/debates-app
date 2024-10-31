@@ -40,39 +40,27 @@ def mongodb_create_video_collection_with_schema():
 def mongodb_insert_video(data, metadata):
     """Insert one video into the mongodb"""
     video_data = _get_video_data(data, metadata)
-    pprint(video_data["debate"])
-    print(video_data["created_at"])
     video_id = _mongodb_insert_one(video_data)
     return video_id
 
 
 def mongodb_find_videos():
-    """Find videos in the mongodb with their versions"""
+    """Find videos in MongoDB and return s3_prefix and version_id."""
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        result = db[MONGO_VIDEO_COLLECTION].find({}, {"video_s3_prefix", "version_id"})
+        query = {}
+        projection = {"s3_prefix", "version_id"}
+        result = db[MONGO_VIDEO_COLLECTION].find(query, projection)
         return _get_list_from_cursor(result)
 
 
-def mongodb_find_video_with_versions(video_s3_prefix):
-    """Find videos in the mongodb with their versions"""
+def mongodb_find_one_video(s3_prefix, version_id):
+    """Find videos in MongoDB and return s3_prefix and version_id."""
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        result = db[MONGO_VIDEO_COLLECTION].find({
-            "s3_name": video_s3_prefix,
-        }, {"version_id"})
-    return _get_list_from_cursor(result)
-
-
-def mongodb_find_video_by_prefix_and_version(video_s3_prefix, version_id):
-    """Find videos in the mongodb with their versions"""
-    with MongoClient(MONGO_URL) as client:
-        db = client[MONGO_DB]
-        document = db[MONGO_VIDEO_COLLECTION].find_one({
-            "video_s3_prefix": video_s3_prefix,
-            "version_id": version_id,
-        })
-    return document
+        query = {"s3_prefix": s3_prefix, "version_id": version_id}
+        document = db[MONGO_VIDEO_COLLECTION].find_one(query)
+        return document
 
 
 def _mongodb_insert_one(video_data):
@@ -92,7 +80,7 @@ def mongodb_delete_videos():
 
 def _get_video_data(data, metadata):
     video_data = {
-        "s3_name": "videos",
+        "s3_prefix": metadata["video"]["s3_prefix"],
         "version_id": str(uuid.uuid4()),
         "created_at": datetime.now(timezone.utc),
         "debate": _get_debate(metadata),

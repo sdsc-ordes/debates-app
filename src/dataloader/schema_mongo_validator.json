@@ -9,9 +9,9 @@
           "version_id"
         ],
         "properties": {
-          "s3_name": {
+          "s3_prefix": {
             "bsonType": "string",
-            "description": "name in S3 corresponding to prefix without dash"
+            "description": "prefix in S3 for the video storage"
           },
           "version_id": {
             "bsonType": "string",
