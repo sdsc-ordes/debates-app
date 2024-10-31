@@ -4,9 +4,10 @@
     "video": {
       "type": "object",
       "properties": {
-        "filename": { "type": "string" }
+        "filename": { "type": "string" },
+        "s3_prefix": { "type": "string" }
       },
-      "required": ["filename"]
+      "required": ["filename", "s3_prefix"]
     },
     "transcripts": {
       "type": "object",
