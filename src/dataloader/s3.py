@@ -5,32 +5,32 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+PROD_S3_ACCESS_KEY = os.getenv("PROD_S3_ACCESS_KEY")
+PROD_S3_SECRET_KEY = os.getenv("PROD_S3_SECRET_KEY")
+PROD_S3_BUCKET_NAME = os.getenv("PROD_S3_BUCKET_NAME")
+PROD_S3_REGION_NAME = os.getenv("PROD_S3_REGION_NAME")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
-S3_REGION_NAME = os.getenv("S3_REGION_NAME")
-DEV_S3_ACCESS_KEY = os.getenv("DEV_S3_ACCESS_KEY")
-DEV_S3_SECRET_KEY = os.getenv("DEV_S3_SECRET_KEY")
-DEV_S3_BUCKET_NAME = os.getenv("DEV_S3_BUCKET_NAME")
-DEV_S3_SERVER = os.getenv("DEV_S3_SERVER")
+S3_SERVER = os.getenv("S3_SERVER")
 
 
 class s3Manager:
-    def __init__(self, dev):
-        if dev:
+    def __init__(self, prod):
+        if prod:
             self.s3 = boto3.client(
                 's3',
-                endpoint_url=DEV_S3_SERVER,
-                aws_access_key_id=DEV_S3_ACCESS_KEY,
-                aws_secret_access_key=DEV_S3_SECRET_KEY
+                aws_access_key_id=PROD_S3_ACCESS_KEY,
+                aws_secret_access_key=PROD_S3_SECRET_KEY,
+                region_name=PROD_S3_REGION_NAME
             )
-            self.bucket_name = DEV_S3_BUCKET_NAME
+            self.bucket_name = PROD_S3_BUCKET_NAME
         else:
             self.s3 = boto3.client(
                 's3',
+                endpoint_url=S3_SERVER,
                 aws_access_key_id=S3_ACCESS_KEY,
-                aws_secret_access_key=S3_SECRET_KEY,
-                region_name=S3_REGION_NAME
+                aws_secret_access_key=S3_SECRET_KEY
             )
             self.bucket_name = S3_BUCKET_NAME
 
