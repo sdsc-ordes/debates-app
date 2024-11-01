@@ -53,7 +53,7 @@ def _map_segment(segment, subtitles, debate_extras):
         subtitle["content"]
         for subtitle in subtitles if subtitle["segment_nr"] == segment["segment_nr"]]
     for key in debate_extras.keys():
-        segment[key] = debate_extras(key)
+        segment[key] = debate_extras[key]
     return segment
 
 def _map_to_solr_date(video_date):
