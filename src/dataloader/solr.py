@@ -48,5 +48,4 @@ def _map_segment(segment, subtitles, schedule):
 
 def _map_to_solr_date(video_date):
     isodate_utc = video_date.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
-    print(isodate_utc)
     return isodate_utc
