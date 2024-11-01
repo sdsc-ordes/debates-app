@@ -34,16 +34,17 @@ def delete_all_documents_in_solr():
 def _map_video_data(video_data):
     subtitles = video_data.get("subtitles")
     video_date = _map_to_solr_date(video_data["debate"]["schedule"])
-    segments = [_map_segment(segment, subtitles, video_date)
+    s3_prefix = video_data["s3_prefix"]
+    segments = [_map_segment(segment, subtitles, video_date, s3_prefix)
                 for segment in video_data["segments"]]
     return segments
 
 
-def _map_segment(segment, subtitles, schedule):
+def _map_segment(segment, subtitles, video_date):
     segment["statement"] = [
         subtitle["content"]
         for subtitle in subtitles if subtitle["segment_nr"] == segment["segment_nr"]]
-    segment["date"] = schedule
+    segment["date"] = video_date
     return segment
 
 def _map_to_solr_date(video_date):
