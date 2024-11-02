@@ -80,6 +80,10 @@ services:
       SECRET_MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       SECRET_MONGO_DB: ${MONGO_DB}
       PUBLIC_MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
+      S3_SERVER: http://minio-instance:9000
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
     command: ["node", "build"]
 
   dataloader:
@@ -95,14 +99,14 @@ services:
       MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       MONGO_DB: ${MONGO_DB}
       MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
-      DEV_S3_SERVER: http://minio-instance:9000
-      DEV_S3_BUCKET_NAME: ${S3_BUCKET_NAME}
-      DEV_S3_ACCESS_KEY: ${S3_ACCESS_KEY}
-      DEV_S3_SECRET_KEY: ${S3_SECRET_KEY}
-      S3_REGION_NAME: ${PROD_S3_REGION_NAME}
-      S3_BUCKET_NAME: ${PROD_S3_BUCKET_NAME}
-      S3_ACCESS_KEY: ${PROD_S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${PROD_S3_SECRET_KEY}
+      S3_SERVER: http://minio-instance:9000
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      PROD_S3_REGION_NAME: ${PROD_S3_REGION_NAME}
+      PROD_S3_BUCKET_NAME: ${PROD_S3_BUCKET_NAME}
+      PROD_S3_ACCESS_KEY: ${PROD_S3_ACCESS_KEY}
+      PROD_S3_SECRET_KEY: ${PROD_S3_SECRET_KEY}
     command: ["/bin/sh"]
 
   proxy:
