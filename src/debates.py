@@ -27,8 +27,8 @@ def s3_to_mongo(
         parsed_data = dl_parse_srt.parse_subtitles(raw_data)
         raw_metadata = s3.get_s3_data(s3_yml_path)
         parsed_metadata = dl_parse_yml.parse_metadata(raw_metadata)
-        video_id = dl_mongo.mongodb_insert_video(parsed_data, parsed_metadata)
-        print(f"video has been successfully added at {video_id}")
+        dl_mongo.mongodb_insert_video(parsed_data, parsed_metadata)
+        print(f"video has been successfully added")
     except Exception as e:
         print(f"S3 data could not be loaded to mongodb. An exception occurred: {e}")
         _print_traceback(debug)
