@@ -57,5 +57,5 @@ def _map_segment(segment, subtitles, debate_extras):
     return segment
 
 def _map_to_solr_date(video_date):
-    isodate_utc = video_date.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+    isodate_utc = video_date
     return isodate_utc
