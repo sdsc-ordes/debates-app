@@ -18,6 +18,10 @@
           "bsonType": "string",
           "description": "Datetime when the collection item was created"
         },
+        "original": {
+          "bsonType": "bool",
+          "description": "Whether the metadata are original or were updated"
+        },
         "debate": {
           "bsonType": "object",
           "description": "Metadata on the debate",

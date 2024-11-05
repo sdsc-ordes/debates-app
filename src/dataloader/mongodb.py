@@ -79,12 +79,15 @@ def mongodb_delete_videos():
 def _get_video_data(data, metadata):
     video_data = {
         "s3_prefix": metadata["video"]["s3_prefix"],
+        "original": True,
         "version_id": str(uuid.uuid4()),
         "created_at": _format_current_datetime(),
         "debate": _get_debate(metadata),
         "speakers": _get_speakers(data),
         "segments": _get_segments(data),
         "subtitles": _get_subtitles(data),
+        "s3_path_srt": metadata["video"]["s3_path_srt"],
+        "s3_path_video": metadata["video"]["s3_path_video"],
     }
     return video_data
 

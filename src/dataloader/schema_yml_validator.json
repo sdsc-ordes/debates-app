@@ -5,7 +5,9 @@
       "type": "object",
       "properties": {
         "filename": { "type": "string" },
-        "s3_prefix": { "type": "string" }
+        "s3_prefix": { "type": "string" },
+        "s3_path_srt": { "type": "string" },
+        "s3_path_video": { "type": "string" }
       },
       "required": ["filename", "s3_prefix"]
     },
