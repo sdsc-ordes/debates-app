@@ -5,9 +5,6 @@ import importlib.resources as resources
 from datetime import datetime, timezone
 import pytz
 from pprint import pprint
-from bson import Timestamp
-import bson
-from bson import datetime as bson_datetime
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -16,6 +13,7 @@ load_dotenv()
 MONGO_URL = os.getenv("MONGO_URL")
 MONGO_DB = os.getenv("MONGO_DB")
 MONGO_VIDEO_COLLECTION = os.getenv("MONGO_VIDEO_COLLECTION")
+ZURICH_TZ = pytz.timezone('Europe/Zurich')
 
 
 def _get_schema():
@@ -82,7 +80,7 @@ def _get_video_data(data, metadata):
     video_data = {
         "s3_prefix": metadata["video"]["s3_prefix"],
         "version_id": str(uuid.uuid4()),
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(ZURICH_TZ).isoformat(),
         "debate": _get_debate(metadata),
         "speakers": _get_speakers(data),
         "segments": _get_segments(data),
@@ -100,7 +98,7 @@ def _get_list_from_cursor(cursor):
 
 def _get_debate(metadata):
     debate = {
-      "schedule": _transform_schedule_into_isodate(metadata["schedule"]).isoformat(),
+      "schedule": _transform_schedule_into_isodate(metadata["schedule"]),
       "type": metadata["context"]["type"],
       "session": metadata["context"]["session"],
       "topic": metadata["context"]["topic"],
@@ -162,5 +160,5 @@ def _transform_schedule_into_isodate(schedule):
     naive_datetime = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M")
     timezone_obj = pytz.timezone(schedule["timezone"])
     localized_datetime = timezone_obj.localize(naive_datetime)
-    utc_datetime = localized_datetime.astimezone(pytz.UTC)
-    return utc_datetime
+    zh_datetime = localized_datetime.astimezone(ZURICH_TZ)
+    return zh_datetime.isoformat()
