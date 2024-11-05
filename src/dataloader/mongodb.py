@@ -80,7 +80,7 @@ def _get_video_data(data, metadata):
     video_data = {
         "s3_prefix": metadata["video"]["s3_prefix"],
         "version_id": str(uuid.uuid4()),
-        "created_at": datetime.now(ZURICH_TZ).isoformat(),
+        "created_at": _format_current_datetime(),
         "debate": _get_debate(metadata),
         "speakers": _get_speakers(data),
         "segments": _get_segments(data),
@@ -98,7 +98,7 @@ def _get_list_from_cursor(cursor):
 
 def _get_debate(metadata):
     debate = {
-      "schedule": _transform_schedule_into_isodate(metadata["schedule"]),
+      "schedule": _format_debate_schedule(metadata["schedule"]),
       "type": metadata["context"]["type"],
       "session": metadata["context"]["session"],
       "topic": metadata["context"]["topic"],
@@ -155,10 +155,21 @@ def _get_segment(data, segment_nr):
     return segment
 
 
-def _transform_schedule_into_isodate(schedule):
+def _format_debate_schedule(schedule):
     datetime_str = f"{schedule['date']} {schedule['time']}"
     naive_datetime = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M")
     timezone_obj = pytz.timezone(schedule["timezone"])
     localized_datetime = timezone_obj.localize(naive_datetime)
-    zh_datetime = localized_datetime.astimezone(ZURICH_TZ)
-    return zh_datetime.isoformat()
+    utc_datetime = localized_datetime.astimezone(pytz.UTC)
+    return _format_date(utc_datetime)
+
+
+def _format_current_datetime():
+    current_datetime = datetime.now(
+        timezone.utc
+    )
+    return _format_date(current_datetime)
+
+
+def _format_date(dt):
+    return dt.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
