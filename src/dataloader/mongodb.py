@@ -82,7 +82,7 @@ def _get_video_data(data, metadata):
     video_data = {
         "s3_prefix": metadata["video"]["s3_prefix"],
         "version_id": str(uuid.uuid4()),
-        "created_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "debate": _get_debate(metadata),
         "speakers": _get_speakers(data),
         "segments": _get_segments(data),
@@ -100,7 +100,7 @@ def _get_list_from_cursor(cursor):
 
 def _get_debate(metadata):
     debate = {
-      "schedule": _transform_schedule_into_isodate(metadata["schedule"]),
+      "schedule": _transform_schedule_into_isodate(metadata["schedule"]).isoformat(),
       "type": metadata["context"]["type"],
       "session": metadata["context"]["session"],
       "topic": metadata["context"]["topic"],
