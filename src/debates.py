@@ -1,5 +1,7 @@
 import typer
 import traceback
+import uvicorn
+import os
 from pprint import pprint
 import dataloader.srt_parser as dl_parse_srt
 import dataloader.yml_parser as dl_parse_yml
@@ -8,12 +10,18 @@ import dataloader.file as dl_file
 import dataloader.solr as dl_solr
 from typing_extensions import Annotated
 from dataloader.s3 import s3Manager
+from dataloader.api import api
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_HOST = os.getenv("API_HOST")
 
 
-app = typer.Typer()
+cli = typer.Typer()
 
 
-@app.command()
+@cli.command()
 def s3_to_mongo(
     s3_srt_path: Annotated[str, typer.Argument(help="s3 srt file path")],
     s3_yml_path: Annotated[str, typer.Argument(help="s3 metadata path")],
@@ -34,7 +42,7 @@ def s3_to_mongo(
         _print_traceback(debug)
 
 
-@app.command()
+@cli.command()
 def mongo_to_solr(
     s3_prefix: Annotated[str, typer.Argument(help="s3 prefix of a video")],
     version_id: Annotated[str, typer.Argument(help="version_id of a video")],
@@ -48,7 +56,7 @@ def mongo_to_solr(
         print(f"An error occurred during mongo to solr: {e}")
         _print_traceback(debug)
 
-@app.command()
+@cli.command()
 def parse(
     srt_file: Annotated[str, typer.Argument(help="SRT file as transcription of a video")],
     output: Annotated[str, typer.Option(
@@ -67,7 +75,7 @@ def parse(
         _print_traceback(debug)
 
 
-@app.command()
+@cli.command()
 def mongo_get(
     version_id: Annotated[str, typer.Option(help="version_id of video data")] = None,
     s3_prefix: Annotated[str, typer.Option(help="s3 prefix of video data")] = None,
@@ -93,7 +101,7 @@ def mongo_get(
         _print_traceback(debug)
 
 
-@app.command()
+@cli.command()
 def mongo_admin(
     test: Annotated[bool, typer.Option(help="Test Mongodb Connection")] = False,
     create: Annotated[bool, typer.Option(help="Create Mongodb collection with validation schema")] = False,
@@ -121,7 +129,7 @@ def mongo_admin(
             _print_traceback(debug)
 
 
-@app.command()
+@cli.command()
 def solr_admin(
     test: Annotated[bool, typer.Option(help="Test Solr Connection")] = False,
     delete: Annotated[bool, typer.Option(help="Delete all documents from Solr")] = False,
@@ -142,7 +150,7 @@ def solr_admin(
                     _print_traceback(debug)
 
 
-@app.command()
+@cli.command()
 def s3_admin(
     test: Annotated[bool, typer.Option(help="Test S3 Connection")] = False,
     list: Annotated[bool, typer.Option(help="List S3 objects")] = False,
@@ -181,5 +189,13 @@ def _print_traceback(debug):
         traceback.print_exc()
 
 
+@cli.command()
+def serve():
+    """
+    Start the FastAPI server.
+    """
+    uvicorn.run(api, host=API_HOST, port=8000)
+
+
 if __name__ == "__main__":
-    app()
+    cli()

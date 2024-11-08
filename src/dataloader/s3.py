@@ -1,5 +1,7 @@
 import boto3
 import os
+from botocore.exceptions import NoCredentialsError
+from botocore.client import Config
 
 from dotenv import load_dotenv
 
@@ -16,7 +18,7 @@ S3_SERVER = os.getenv("S3_SERVER")
 
 
 class s3Manager:
-    def __init__(self, prod):
+    def __init__(self, prod=False):
         if prod:
             self.s3 = boto3.client(
                 's3',
@@ -30,9 +32,9 @@ class s3Manager:
                 's3',
                 endpoint_url=S3_SERVER,
                 aws_access_key_id=S3_ACCESS_KEY,
-                aws_secret_access_key=S3_SECRET_KEY
+                aws_secret_access_key=S3_SECRET_KEY,
             )
-            self.bucket_name = S3_BUCKET_NAME
+            self.bucket_name = "debates"
 
     def test_connection(self):
         self.s3.head_bucket(Bucket=self.bucket_name)
@@ -51,6 +53,36 @@ class s3Manager:
         response = self.s3.get_object(Bucket=self.bucket_name, Key=s3_path)
         data = response['Body'].read().decode('utf-8')
         return data
+
+    def get_presigned_url(self, object_key, expiration=3600):
+        """
+        Generate a presigned URL for an S3 object.
+        """
+        try:
+            response = self.s3.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket_name, "Key": object_key},
+                ExpiresIn=expiration,
+            )
+            return response
+        except NoCredentialsError:
+            print("Credentials not available.")
+            return None
+
+    def get_video_object_keys(self, prefix):
+        return {
+            "video_key": f"{prefix}/{prefix}.mp4",
+            "subtitle_key": f"{prefix}/{prefix}.srt"
+        }
+
+    def get_video_presigned_urls(self, prefix, expiration=3600):
+        object_keys = self.get_video_object_keys(prefix)
+        video_url = self.get_presigned_url(object_keys["video_key"], expiration)
+        subtitle_url = self.get_presigned_url(object_keys["subtitle_key"], expiration)
+        return {
+            "video_url": video_url,
+            "subtitle_url": subtitle_url,
+        }
 
 
 def _print_objects_for_s3_page(page):
