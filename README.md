@@ -5,12 +5,13 @@
 This is the GUI setup with docker compose for the political debates project
 It contains the following services
 
-- S3: store for the original data
+- Minio: store for the original data
+- Minio Client: mc cli tool for minio to perform the initial setup 
 - Mongodb: store for metadata derived from the original data
 - Solr: search engine that is fed with the latest derived metadata version from the mongodb
-- Mongo Express as convenient UI for the mongodb
-- Dataloader: loads the original data into both Mongodb and Solr
-- Frontend: frontend in Sveltekit, that has a videoplayer page and a search page: the videoplayer page allows to play videos along with their transcripts and edit transcripts and speaker info, that can be stored back to the mongodb as a new version of the metadata
+- Mongo Express: as convenient UI for the mongodb
+- Dataloader: with fastapi as backend
+- Frontend: frontend in Sveltekit, that has a videoplayer page and a search page: the videoplayer page allows to play videos along with their transcripts and edit transcripts and speaker info. The metadata can be edited and stored back to the mongodb as a new version.
 
 ## Docker compose setup
 
@@ -46,32 +47,34 @@ S3_BUCKET_NAME=debates
 S3_ACCESS_KEY=[your-minio-user]
 S3_SECRET_KEY=[your-minio-password]
 MINIO_PATH=[your-path-to-minio-volume]
-
-# Input Files
-VIDEO_INPUT="HRC_20220328.mp4"
-SUBTITLES_INPUT="HRC_20220328.srt"
 ```
 
-### Compose for dev and prod
+### Docker Compose profiles
 
-There are three docker compose files:
+The docker compose setup uses profiles:
 
-- docker-compose.yml: common setup for dev and prod
-- docker-compose.dev.yml: setup for dev
-- docker-compose.prod.yml: setup for prod
-
-Setup dev environment:
+#### Local Development 
 
 ```
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml build
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+docker-compose build
+docker-compose up -d
 ```
 
-Set up on VM for publicly available prototype:
+This starts only the services but not frontend and backend: these can then be started separately
+for development, see instructions in their README's
+
+#### Docker Compose locally
 
 ```
-sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml build
-sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker-compose --profile compose build
+docker-compose --profile compose up -d
+```
+
+#### Docker Compose on VM
+
+```
+docker-compose --profile vm build
+docker-compose --profile vm up -d
 ```
 
 ### Loading data
@@ -100,16 +103,14 @@ python debates.py mongo-to-solr HRC_20220328 3e7c8f90-f0ee-4f5d-a7dc-055f52966b6
 python debates.py mongo-to-solr HRC_20220929 e472d26a-b343-4547-ac7d-cccfc5e890a7
 ```
 
-## TODOS:
-
-- [ ] TODO: Describe dataloading once it is repaired
-- [ ] stream video from S3 and don't add it as an environment variable
-
-
 # PROD urls
 
 https://debates.swisscustodian.ch/solr/#/
 
 https://debates.swisscustodian.ch/
 
+To enter the shell for the initial dataloading:
+
+```
 docker exec -it debates-dataloader-1 sh
+```
