@@ -70,8 +70,8 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 Set up on VM for publicly available prototype:
 
 ```
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml build
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 ### Loading data
@@ -104,3 +104,12 @@ python debates.py mongo-to-solr HRC_20220929 e472d26a-b343-4547-ac7d-cccfc5e890a
 
 - [ ] TODO: Describe dataloading once it is repaired
 - [ ] stream video from S3 and don't add it as an environment variable
+
+
+# PROD urls
+
+https://debates.swisscustodian.ch/solr/#/
+
+https://debates.swisscustodian.ch/
+
+docker exec -it debates-dataloader-1 sh
