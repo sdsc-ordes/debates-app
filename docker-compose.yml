@@ -2,18 +2,34 @@ name: debates
 
 services:
   minio-instance:
-    image: quay.io/minio/minio:RELEASE.2022-02-18T01-50-10Z
+    image: minio/minio
     volumes:
       - ${MINIO_PATH}:/data
     ports:
-      - 9000:9000
+      - "127.0.0.1:9000:9000"
       - 9001:9001
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
-    command: server --console-address :9001 /data
+    command: server --address 0.0.0.0:9000 --console-address :9001 /data
     networks:
       - debates_network
+
+  minio-client:
+    image: minio/mc
+    depends_on:
+      - minio-instance
+    entrypoint: >
+      /bin/sh -c "
+        sleep 20 && mc alias set myminio http://minio-instance:9000 ${S3_ACCESS_KEY} ${S3_SECRET_KEY} &&
+        mc admin info myminio"
+    networks:
+      - debates_network
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+    # Optionally, set a restart policy if you want it to persist after the first execution
+    restart: "no"
 
   solr:
     build:
@@ -78,10 +94,7 @@ services:
       SECRET_MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       SECRET_MONGO_DB: ${MONGO_DB}
       PUBLIC_MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
-      S3_SERVER: http://minio-instance:9000
-      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      PUBLIC_BACKEND_SERVER: http://dataloader:8000
     command: ["node", "build"]
 
   dataloader:
@@ -97,11 +110,13 @@ services:
       MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       MONGO_DB: ${MONGO_DB}
       MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
-      S3_SERVER: http://minio-instance:9000
+      S3_SERVER: http://127.0.0.1:9000
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
-    command: ["/bin/sh"]
+      API_HOST: "0.0.0.0"
+    ports:
+      - "8001:8000"
 
   proxy:
     build:
