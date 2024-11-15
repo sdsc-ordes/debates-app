@@ -53,7 +53,7 @@ MINIO_PATH=[your-path-to-minio-volume]
 
 The docker compose setup uses profiles:
 
-#### Local Development 
+#### Local Development
 
 ```
 docker-compose build
@@ -68,6 +68,14 @@ for development, see instructions in their README's
 ```
 docker-compose --profile compose build
 docker-compose --profile compose up -d
+```
+
+Make sure the frontend is been build with the correct `.env` file in the frontend container.
+In order to run with docker compose it needs the services in the urls for mongodb and dataloader:
+
+```
+SECRET_MONGO_URL=mongodb://[your-mongo-user]:[your-mongo-password]@mongodb-instance:27017/
+PUBLIC_BACKEND_SERVER=http://dataloader:8000
 ```
 
 #### Docker Compose on VM
