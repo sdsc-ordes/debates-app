@@ -47,7 +47,11 @@ class s3Manager:
                 print(f"Content of bucket {self.bucket_name} with prefix '{prefix}':")
             else:
                 print(f"Content of bucket {self.bucket_name}:")
-            _print_objects_for_s3_page(page)
+            # Loop through the contents and print the key and last modified date
+            for obj in page.get('Contents', []):
+                key = obj['Key']
+                last_modified = obj['LastModified']
+                print(f"Key: {key}, Last Modified: {last_modified}")
 
     def get_s3_data(self, s3_path):
         response = self.s3.get_object(Bucket=self.bucket_name, Key=s3_path)
