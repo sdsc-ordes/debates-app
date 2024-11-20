@@ -6,7 +6,7 @@ services:
     volumes:
       - ${MINIO_PATH}:/data
     ports:
-      - "127.0.0.1:9000:9000"
+      - ${MINIO_PORT}:9000
       - 9001:9001
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
@@ -14,24 +14,6 @@ services:
     command: server --address 0.0.0.0:9000 --console-address :9001 /data
     networks:
       - debates_network
-
-  minio-client:
-    image: minio/mc
-    depends_on:
-      - minio-instance
-    entrypoint: >
-      /bin/sh -c "
-        sleep 20 && mc alias set myminio http://minio-instance:9000 ${S3_ACCESS_KEY} ${S3_SECRET_KEY} &&
-        mc admin info myminio"
-    networks:
-      - debates_network
-    environment:
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${S3_SECRET_KEY}
-    # Optionally, set a restart policy if you want it to persist after the first execution
-    restart: "no"
-    profiles:
-      - minio_setup
 
   solr:
     build:
@@ -115,13 +97,13 @@ services:
       MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       MONGO_DB: ${MONGO_DB}
       MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
-      S3_SERVER: http://127.0.0.1:9000
+      S3_SERVER: ${S3_SERVER}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       API_HOST: "0.0.0.0"
     ports:
-      - "127.0.0.1:8001:8000"
+      - ${DATALOADER_PORT}:8000
     profiles:
       - vm
       - compose
