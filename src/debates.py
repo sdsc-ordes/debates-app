@@ -43,6 +43,27 @@ def s3_to_mongo(
 
 
 @cli.command()
+def files_to_mongo(
+    srt_path: Annotated[str, typer.Argument(help="srt file path")],
+    yml_path: Annotated[str, typer.Argument(help="metadata file path")],
+    debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
+):
+    """Get data and metadata for files and add it to the Mongo DB"""
+    try:
+        raw_data = dl_file.get_data_from_file(srt_path)
+        parsed_data = dl_parse_srt.parse_subtitles(raw_data)
+        raw_metadata = dl_file.get_data_from_file(yml_path)
+        parsed_metadata = dl_parse_yml.parse_metadata(raw_metadata)
+        pprint(parsed_data)
+        pprint(parsed_metadata)
+        dl_mongo.mongodb_insert_video(parsed_data, parsed_metadata)
+        print(f"video has been successfully added")
+    except Exception as e:
+        print(f"S3 data could not be loaded to mongodb. An exception occurred: {e}")
+        _print_traceback(debug)
+
+
+@cli.command()
 def mongo_to_solr(
     s3_prefix: Annotated[str, typer.Argument(help="s3 prefix of a video")],
     version_id: Annotated[str, typer.Argument(help="version_id of a video")],
