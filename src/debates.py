@@ -56,6 +56,7 @@ def mongo_to_solr(
         print(f"An error occurred during mongo to solr: {e}")
         _print_traceback(debug)
 
+
 @cli.command()
 def parse(
     srt_file: Annotated[str, typer.Argument(help="SRT file as transcription of a video")],
