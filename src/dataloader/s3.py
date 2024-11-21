@@ -15,6 +15,7 @@ S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 S3_SERVER = os.getenv("S3_SERVER")
+S3_FRONTEND_BASE_URL = os.getenv("S3_FRONTEND_BASE_URL")
 
 
 class s3Manager:
@@ -68,7 +69,8 @@ class s3Manager:
                 Params={"Bucket": self.bucket_name, "Key": object_key},
                 ExpiresIn=expiration,
             )
-            return response
+            frontend_url = response.replace(S3_SERVER, S3_FRONTEND_BASE_URL)
+            return frontend_url
         except NoCredentialsError:
             print("Credentials not available.")
             return None
