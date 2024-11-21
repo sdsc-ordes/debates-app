@@ -1,5 +1,4 @@
 import json
-import os
 
 
 def write_parsed_data_to_file(parsed_data, output):
