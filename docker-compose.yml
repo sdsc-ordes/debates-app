@@ -6,7 +6,7 @@ services:
     volumes:
       - ${MINIO_PATH}:/data
     ports:
-      - ${MINIO_PORT:-9000}:9000
+      - ${LOCAL_HOST-}9000:9000
       - 9001:9001
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
@@ -19,7 +19,7 @@ services:
     build:
       context: ./solr
     ports:
-      - "8983:8983"
+      - 8983:8983
     networks:
       - debates_network
     healthcheck:
@@ -38,7 +38,7 @@ services:
   mongodb-instance:
     image: mongo:7.0.8
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - ${LOCAL_HOST-}27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
@@ -51,7 +51,7 @@ services:
   mongodb-express:
     image: mongo-express:1.0.2-18
     ports:
-      - "8081:8081"
+      - 8081:8081
     environment:
       ME_CONFIG_OPTIONS_EDITORTHEME: "ambiance"
       ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
@@ -62,12 +62,14 @@ services:
       - debates_network
     depends_on:
       - mongodb-instance
+    profiles:
+      - compose
 
   frontend:
     build:
       context: ./frontend
     ports:
-      - "3000:3000"
+      - 3000:3000
     depends_on:
       - solr
       - mongodb-instance
@@ -104,7 +106,7 @@ services:
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       API_HOST: "0.0.0.0"
     ports:
-      - ${DATALOADER_PORT:-8000}:8000
+      - 8000:8000
     profiles:
       - vm
       - compose
@@ -127,8 +129,8 @@ services:
     networks:
       - debates_network
     ports:
-      - "443:443"
-      - "80:80"
+      - 443:443
+      - 80:80
     volumes:
       - type: bind
         source: /etc/letsencrypt/archive/debates.swisscustodian.ch/cert1.pem
