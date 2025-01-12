@@ -15,6 +15,12 @@ input
 # output data
 output
 
+# data
+data
+
+# scripts
+scripts
+
 # environment variables
 .env
 .env.local
