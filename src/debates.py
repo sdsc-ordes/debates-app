@@ -157,8 +157,10 @@ def s3_admin(
     list: Annotated[bool, typer.Option(help="List S3 objects")] = False,
     prefix: Annotated[str, typer.Option(help="List Objects for a prefix")] = "",
     path: Annotated[str, typer.Option(help="Get data for a path")] = "",
+    download: Annotated[str, typer.Option(help="Download for a path")] = "",
     prod: Annotated[bool, typer.Option(help="Use production S3")] = False,
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
+    file: Annotated[str, typer.Option(help="Output file")] = False,
 ):
     """Test S3 connection, list data on S3, get data by s3_path
     """
@@ -182,7 +184,16 @@ def s3_admin(
             data = s3.get_s3_data(path)
             print(data)
         except Exception as e:
-            print(f"The date for s3 path {path} could not be retrieved. An exception occurred: {e}")
+            print(f"The data for s3 path {path} could not be retrieved. An exception occurred: {e}")
+            _print_traceback(debug)
+    if download:
+        if not file:
+            print(f"please provide output file name with --file")
+        try:
+            s3 = s3Manager(prod)
+            s3.download_s3_data(download, file)
+        except Exception as e:
+            print(f"The data for s3 path {download} could not be downloaded. An exception occurred: {e}")
             _print_traceback(debug)
 
 def _print_traceback(debug):

@@ -59,6 +59,9 @@ class s3Manager:
         data = response['Body'].read().decode('utf-8')
         return data
 
+    def download_s3_data(self, s3_path, file):
+        self.s3.download_file(self.bucket_name, s3_path, file)
+
     def get_presigned_url(self, object_key, expiration=3600):
         """
         Generate a presigned URL for an S3 object.
@@ -89,9 +92,3 @@ class s3Manager:
             "video_url": video_url,
             "subtitle_url": subtitle_url,
         }
-
-
-def _print_objects_for_s3_page(page):
-    for obj in page.get('Contents', []):
-        key = obj['Key']
-        print(key)
