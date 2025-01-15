@@ -1,4 +1,5 @@
 import typer
+import sys
 import traceback
 import uvicorn
 import os
@@ -16,42 +17,52 @@ from dotenv import load_dotenv
 load_dotenv()
 
 API_HOST = os.getenv("API_HOST")
+SUFFIX_SRT_ORIG = os.getenv("SUFFIX_SRT_ORIG")
+SUFFIX_SRT_EN = os.getenv("SUFFIX_SRT_EN")
+SUFFIX_METADATA = os.getenv("SUFFIX_METADATA")
 
 
 cli = typer.Typer()
 
 
 @cli.command()
-def s3_to_mongo(
-    s3_srt_path: Annotated[str, typer.Argument(help="s3 srt file path")],
-    s3_yml_path: Annotated[str, typer.Argument(help="s3 metadata path")],
+def s3_to_mongo_solr(
+    s3_prefix: Annotated[str, typer.Argument(help="s3 prefix")],
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
-    prod: Annotated[bool, typer.Option(help="Use Production S3 instance")] = False,
 ):
     """Get data and metadata for s3_path from S3 and add it to the Mongo DB"""
     try:
-        s3 = s3Manager(prod)
-        raw_data = s3.get_s3_data(s3_srt_path)
-        parsed_data = dl_parse_srt.parse_subtitles(raw_data)
-        raw_metadata = s3.get_s3_data(s3_yml_path)
+        s3 = s3Manager()
+        s3_srt_path_orig = f"{s3_prefix}/{s3_prefix}-{SUFFIX_SRT_ORIG}"
+        print(f"expected s3 path for original transcript {s3_srt_path_orig}")
+        s3_srt_path_en = f"{s3_prefix}/{s3_prefix}-{SUFFIX_SRT_EN}"
+        print(f"expected s3 path for english translation {s3_srt_path_en}")
+        s3_metadata_path = f"{s3_prefix}/{s3_prefix}-{SUFFIX_METADATA}"
+        print(f"expected s3 path for metadata {s3_metadata_path}")
+        raw_data_en = s3.get_s3_data(s3_srt_path_en)
+        raw_data_orig = s3.get_s3_data(s3_srt_path_orig)
+        parsed_data_orig = dl_parse_srt.parse_subtitles(raw_data_orig)
+        parsed_data_en = dl_parse_srt.parse_subtitles(raw_data_en)
+        raw_metadata = s3.get_s3_data(s3_metadata_path)
         parsed_metadata = dl_parse_yml.parse_metadata(raw_metadata)
-        dl_mongo.mongodb_insert_video(parsed_data, parsed_metadata)
-        print(f"video has been successfully added")
+        debate_data_db = dl_mongo.mongodb_insert_debate(
+            metadata=parsed_metadata, data_orig=parsed_data_orig, data_en=parsed_data_en)
+        dl_solr.update_solr(debate_data_db)
     except Exception as e:
-        print(f"S3 data could not be loaded to mongodb. An exception occurred: {e}")
+        print(f"S3 data could not be loaded into secondary databases. An exception occurred: {e}")
         _print_traceback(debug)
 
 
 @cli.command()
 def mongo_to_solr(
-    s3_prefix: Annotated[str, typer.Argument(help="s3 prefix of a video")],
-    version_id: Annotated[str, typer.Argument(help="version_id of a video")],
+    s3_prefix: Annotated[str, typer.Argument(help="s3 prefix of a debate")],
+    version_id: Annotated[str, typer.Argument(help="version_id of a debate")],
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
     """Get document from mongodb and add it to Solr"""
     try:
-        video_data = dl_mongo.mongodb_find_one_video(s3_prefix, version_id)
-        dl_solr.update_solr(video_data)
+        debate_data = dl_mongo.mongodb_find_one_debate(s3_prefix, version_id)
+        dl_solr.update_solr(debate_data)
     except Exception as e:
         print(f"An error occurred during mongo to solr: {e}")
         _print_traceback(debug)
@@ -59,7 +70,7 @@ def mongo_to_solr(
 
 @cli.command()
 def parse(
-    srt_file: Annotated[str, typer.Argument(help="SRT file as transcription of a video")],
+    srt_file: Annotated[str, typer.Argument(help="SRT file as transcription of a debate")],
     output: Annotated[str, typer.Option(
         help="Output path: when provide the output will be written to a file"
     )],
@@ -78,25 +89,25 @@ def parse(
 
 @cli.command()
 def mongo_get(
-    version_id: Annotated[str, typer.Option(help="version_id of video data")] = None,
-    s3_prefix: Annotated[str, typer.Option(help="s3 prefix of video data")] = None,
-    all: Annotated[bool, typer.Option(help="List all videos in the video collection")] = False,
+    version_id: Annotated[str, typer.Option(help="version_id of debate data")] = None,
+    s3_prefix: Annotated[str, typer.Option(help="s3 prefix of debate data")] = None,
+    all: Annotated[bool, typer.Option(help="List all debates in the debate collection")] = False,
     debug: Annotated[bool, typer.Option(help="Print traceback on exception")] = False,
 ):
     """Find data in Mongodb: you may use s3_prefix and version_id to filter"""
     try:
         if all:
-            video_data = dl_mongo.mongodb_find_videos()
-            if video_data:
-                pprint(video_data)
+            debate_data = dl_mongo.mongodb_find_debates()
+            if debate_data:
+                pprint(debate_data)
             else:
-                print(f"No video item has not been found.")
+                print(f"No debate item has not been found.")
         if s3_prefix and version_id:
-            video_data = dl_mongo.mongodb_find_one_video(s3_prefix, version_id)
-            if video_data:
-                print(f"Found video for s3_prefix {video_data['s3_prefix']} and version_id {video_data['version_id']}")
+            debate_data = dl_mongo.mongodb_find_one_debate(s3_prefix, version_id)
+            if debate_data:
+                print(f"Found debate for s3_prefix {debate_data['s3_prefix']} and version_id {debate_data['version_id']}")
             else:
-                print(f"No video has not been found for s3_prefix {video_data['s3_prefix']} and version_id {video_data['version_id']}.")
+                print(f"No debate has not been found for s3_prefix {debate_data['s3_prefix']} and version_id {debate_data['version_id']}.")
     except Exception as e:
         print(f"An error occurred for mongodb find: {e}")
         _print_traceback(debug)
@@ -113,18 +124,19 @@ def mongo_admin(
     if test:
         try:
             dl_mongo.mongodb_test_connection()
+            print
         except Exception as e:
             print(f"An error occurred for mongodb connection: {e}")
             _print_traceback(debug)
     if delete:
         try:
-            dl_mongo.mongodb_delete_videos()
+            dl_mongo.mongodb_delete_debates()
         except Exception as e:
-            print(f"An error for deleting videos from mongodb: {e}")
+            print(f"An error for deleting debates from mongodb: {e}")
             _print_traceback(debug)
     if create:
         try:
-            dl_mongo.mongodb_create_video_collection_with_schema()
+            dl_mongo.mongodb_create_debate_collection_with_schema()
         except Exception as e:
             print(f"An error occurred when creating collection with schema validation on mongodb: {e}")
             _print_traceback(debug)
