@@ -16,6 +16,9 @@ S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 S3_SERVER = os.getenv("S3_SERVER")
 S3_FRONTEND_BASE_URL = os.getenv("S3_FRONTEND_BASE_URL")
+SUFFIX_SRT_ORIG = os.getenv("SUFFIX_SRT_ORIG")
+SUFFIX_SRT_EN = os.getenv("SUFFIX_SRT_EN")
+SUFFIX_METADATA = os.getenv("SUFFIX_METADATA")
 
 
 class s3Manager:
@@ -62,14 +65,19 @@ class s3Manager:
     def download_s3_data(self, s3_path, file):
         self.s3.download_file(self.bucket_name, s3_path, file)
 
-    def get_presigned_url(self, object_key, expiration=3600):
+    def get_presigned_url(self, prefix, key, expiration=3600):
         """
         Generate a presigned URL for an S3 object.
         """
         try:
+            object_key = f"{prefix}/{key}"
             response = self.s3.generate_presigned_url(
                 "get_object",
-                Params={"Bucket": self.bucket_name, "Key": object_key},
+                Params={
+                    "Bucket": self.bucket_name,
+                    "Key": object_key,
+                    "ResponseContentDisposition": f"attachment; filename={object_key}"
+                },
                 ExpiresIn=expiration,
             )
             frontend_url = response.replace(S3_SERVER, S3_FRONTEND_BASE_URL)
@@ -77,18 +85,3 @@ class s3Manager:
         except NoCredentialsError:
             print("Credentials not available.")
             return None
-
-    def get_video_object_keys(self, prefix):
-        return {
-            "video_key": f"{prefix}/{prefix}.mp4",
-            "subtitle_key": f"{prefix}/{prefix}.srt"
-        }
-
-    def get_video_presigned_urls(self, prefix, expiration=3600):
-        object_keys = self.get_video_object_keys(prefix)
-        video_url = self.get_presigned_url(object_keys["video_key"], expiration)
-        subtitle_url = self.get_presigned_url(object_keys["subtitle_key"], expiration)
-        return {
-            "video_url": video_url,
-            "subtitle_url": subtitle_url,
-        }

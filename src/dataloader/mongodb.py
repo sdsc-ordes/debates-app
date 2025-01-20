@@ -1,10 +1,10 @@
 import json
 import os
 import uuid
+from bson import ObjectId
 import importlib.resources as resources
 from datetime import datetime, timezone
 import pytz
-from pprint import pprint
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -12,8 +12,13 @@ load_dotenv()
 
 MONGO_URL = os.getenv("MONGO_URL")
 MONGO_DB = os.getenv("MONGO_DB")
-MONGO_VIDEO_COLLECTION = os.getenv("MONGO_VIDEO_COLLECTION")
+MONGO_DEBATES_COLLECTION = os.getenv("MONGO_DEBATES_COLLECTION")
 ZURICH_TZ = pytz.timezone('Europe/Zurich')
+LANGUAGE_ENGLISH = "en"
+
+
+class DataloaderMongoException(Exception):
+    pass
 
 
 def _get_schema():
@@ -24,10 +29,10 @@ def _get_schema():
 
 def mongodb_test_connection():
     with MongoClient(MONGO_URL, serverSelectionTimeoutMS = 2000) as client:
-        return client.server_info()
+        print(client.server_info())
 
 
-def mongodb_create_video_collection_with_schema():
+def mongodb_create_debate_collection_with_schema():
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
         schema = _get_schema()
@@ -35,61 +40,87 @@ def mongodb_create_video_collection_with_schema():
         print(result)
 
 
-def mongodb_insert_video(data, metadata):
-    """Insert one video into the mongodb"""
-    video_data = _get_video_data(data, metadata)
-    video_id = _mongodb_insert_one(video_data)
-    return video_id
+def mongodb_insert_debate(data_orig, data_en, metadata):
+    """Insert one debate into the mongodb"""
+    debate_data = _get_debate_data(
+        data_orig=data_orig, data_en=data_en, metadata=metadata
+    )
+    try:
+        debate_data_db = _get_document_by_id(debate_id)
+    except Exception as e:
+        pass
+    debate_id = _mongodb_insert_one(debate_data)
+    print(f"Successfully inserted debate into mongodb with id: {debate_id}")
+    debate_data_db = _get_document_by_id(debate_id)
+    return debate_data_db
 
 
-def mongodb_find_videos():
-    """Find videos in MongoDB and return s3_prefix and version_id."""
+def mongodb_find_debates():
+    """Find debates in MongoDB and return s3_prefix and version_id."""
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
         query = {}
         projection = {"s3_prefix", "version_id"}
-        result = db[MONGO_VIDEO_COLLECTION].find(query, projection)
+        result = db[MONGO_DEBATES_COLLECTION].find(query, projection)
         return _get_list_from_cursor(result)
 
 
-def mongodb_find_one_video(s3_prefix, version_id):
-    """Find videos in MongoDB and return s3_prefix and version_id."""
+def _get_document_by_id(document_id):
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        query = {"s3_prefix": s3_prefix, "version_id": version_id}
-        document = db[MONGO_VIDEO_COLLECTION].find_one(query)
+        document = db[MONGO_DEBATES_COLLECTION].find_one({"_id": ObjectId(document_id)})
         return document
 
 
-def _mongodb_insert_one(video_data):
+def mongodb_find_one_debate(s3_prefix, version_id=None):
+    """Find debates in MongoDB and return s3_prefix and version_id."""
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        result = db[MONGO_VIDEO_COLLECTION].insert_one(
-            video_data
+        query = {"s3_prefix": s3_prefix}
+        if version_id:
+            query["version_id"] = version_id
+        document = db[MONGO_DEBATES_COLLECTION].find_one(query)
+        return document
+
+
+def _mongodb_insert_one(debate_data):
+    with MongoClient(MONGO_URL) as client:
+        db = client[MONGO_DB]
+        debate_id = db[MONGO_DEBATES_COLLECTION].insert_one(
+            debate_data
         ).inserted_id
-        pprint(result)
+        return debate_id
 
 
-def mongodb_delete_videos():
+def mongodb_delete_debates():
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        db.drop_collection(MONGO_VIDEO_COLLECTION)
+        db.drop_collection(MONGO_DEBATES_COLLECTION)
 
 
-def _get_video_data(data, metadata):
-    video_data = {
-        "s3_prefix": metadata["video"]["s3_prefix"],
-        "original": True,
-        "version_id": str(uuid.uuid4()),
+def _get_debate_data(data_orig, data_en, metadata):
+    debate_data = {
+        "s3_prefix": metadata["s3_prefix"],
+        "version": _get_version(),
+        "s3_keys": metadata["s3_keys"],
         "created_at": _format_current_datetime(),
         "debate": _get_debate(metadata),
-        "speakers": _get_speakers(data),
-        "segments": _get_segments(data),
-        "subtitles": _get_subtitles(data),
-        "s3_path_srt": metadata["video"]["s3_path_srt"],
-        "s3_path_video": metadata["video"]["s3_path_video"],
+        "speakers": _get_speakers(data_orig),
+        "segments": _get_segments(data_orig),
+        "subtitles": _get_subtitles(data_orig),
+        "subtitles_en": _get_subtitles(data_en, language=LANGUAGE_ENGLISH),
+        "s3_keys": metadata["s3_keys"],
+        "media_key": metadata["media_key"],
     }
-    return video_data
+    return debate_data
+
+def _get_version():
+    version = {
+        "version_id": str(uuid.uuid4()),
+        "original": True
+    }
+    return version
+
 
 
 def _get_list_from_cursor(cursor):
@@ -102,48 +133,53 @@ def _get_list_from_cursor(cursor):
 def _get_debate(metadata):
     debate = {
       "schedule": _format_debate_schedule(metadata["schedule"]),
+      "public": metadata["context"]["public"],
       "type": metadata["context"]["type"],
       "session": metadata["context"]["session"],
-      "topic": metadata["context"]["topic"],
-      "public": metadata["context"]["public"],
     }
     return debate
 
 
-def _get_subtitles(data):
-    subtitles = [{
-        "index": subtitle["index"],
-        "start": subtitle["start"],
-        "end": subtitle["end"],
-        "content": subtitle["content"],
-        "segment_nr": subtitle["segment_nr"],
-    } for subtitle in data]
+def _get_subtitles(data, language=None):
+    subtitles = []
+    for item in data:
+        subtitle = {
+            "index": item["index"],
+            "start": item["start"],
+            "end": item["end"],
+            "content": item["content"],
+            "segment_nr": item["segment_nr"],
+        }
+        if language:
+            subtitle["language"] = language
+        else:
+            subtitle["language"] = ""
+        subtitles.append(subtitle)
     return subtitles
 
 
-def _get_speakers(data):
-    speaker_ids = {subtitle["speaker_id"] for subtitle in data}
+def _get_speakers(data_orig):
+    speaker_ids = {subtitle["speaker_id"] for subtitle in data_orig}
     speakers = [{
         "speaker_id": speaker_id,
         "name": "",
-        "country": "",
-        "role": "",
+        "role_tag": "",
     } for speaker_id in speaker_ids]
     return speakers
 
 
-def _get_segments(data):
-    segment_nrs = {subtitle["segment_nr"] for subtitle in data}
+def _get_segments(data_orig):
+    segment_nrs = {subtitle["segment_nr"] for subtitle in data_orig}
     segments = []
     for i, segment_nr in enumerate(segment_nrs):
-        segment = _get_segment(data, segment_nr)
+        segment = _get_segment(data_orig, segment_nr)
         segments.append(segment)
     return segments
 
 
-def _get_segment(data, segment_nr):
+def _get_segment(data_orig, segment_nr):
     subtitles_in_segment = [
-        subtitle for subtitle in data if subtitle["segment_nr"] == segment_nr
+        subtitle for subtitle in data_orig if subtitle["segment_nr"] == segment_nr
     ]
     speaker_id = subtitles_in_segment[0]["speaker_id"]
     segment_nr = subtitles_in_segment[0]["segment_nr"]
