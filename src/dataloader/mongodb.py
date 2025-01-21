@@ -110,7 +110,7 @@ def _get_debate_data(data_orig, data_en, metadata):
         "subtitles": _get_subtitles(data_orig),
         "subtitles_en": _get_subtitles(data_en, language=LANGUAGE_ENGLISH),
         "s3_keys": metadata["s3_keys"],
-        "media_key": metadata["media_key"],
+        "media": metadata["media"],
     }
     return debate_data
 
