@@ -3,11 +3,13 @@ from pydantic import BaseModel
 from typing import List
 
 from dataloader.s3 import s3Manager
-from dataloader.mongodb import mongodb_find_one_debate
+import dataloader.mongodb as mongodb
 
 from fastapi import FastAPI
+from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from pprint import pprint
+import dataloader.merge as merge
 
 api = FastAPI()
 
@@ -73,16 +75,34 @@ async def mongo_metadata(request: S3MetadataRequest):
     """
     Get Metadata for Debates Object
     """
-    try:
-        document = mongodb_find_one_debate(request.prefix)
-        document["_id"] = str(document["_id"])
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except RuntimeError as re:
-        raise HTTPException(status_code=500, detail=str(re))
-    except Exception as e:
-        print(e)
+    debate = mongodb.mongodb_find_one_document(
+        { "s3_prefix": request.prefix }, mongodb.MONGO_DEBATES_COLLECTION
+    )
+    debate_id = debate["_id"]
+    speakers = mongodb.mongodb_find_one_document(
+        { "debate_id": debate_id }, mongodb.MONGO_SPEAKERS_COLLECTION
+    )
+    segments = mongodb.mongodb_find_one_document(
+        { "debate_id": debate_id }, mongodb.MONGO_SEGMENTS_COLLECTION
+    )
+    subtitles = mongodb.mongodb_find_one_document(
+        { "debate_id": debate_id, "type": merge.SUBTITLE_TYPE_TRANSCRIPT }, mongodb.MONGO_SUBTITLE_COLLECTION
+    )
+    subtitles_en = mongodb.mongodb_find_one_document(
+        { "debate_id": debate_id, "type": merge.SUBTITLE_TYPE_TRANSLATION }, mongodb.MONGO_SUBTITLE_COLLECTION
+    )
     return {
-        "success": True,
-        "data": document,
+        "debate": _clean_document(debate),
+        "speakers": _clean_document(speakers),
+        "segments": _clean_document(segments),
+        "subtitles": _clean_document(subtitles),
+        "subtitles_en": _clean_document(subtitles_en),
     }
+
+
+def _clean_document(document):
+    if "_id" in document.keys():
+        document["_id"] = str(document["_id"])
+    if "debate_id" in document.keys():
+        document["debate_id"] = str(document["debate_id"])
+    return document

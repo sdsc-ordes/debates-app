@@ -13,13 +13,12 @@ def parse_subtitles(data):
     segment_nr = 0
     speaker_id = None
     for subtitle in subtitles_raw:
-        subtitle_dict = _process_subtitle(subtitle)
-        current_speaker_id = subtitle_dict["speaker_id"]
+        processed_subtitle = _process_subtitle(subtitle)
+        current_speaker_id = processed_subtitle["speaker_id"]
         if current_speaker_id !=  speaker_id:
             segment_nr += 1
             speaker_id = current_speaker_id
-        subtitle_dict["segment_nr"] = segment_nr
-        subtitles_processed.append(subtitle_dict)
+        subtitles_processed.append(processed_subtitle)
     return subtitles_processed
 
 

@@ -18,9 +18,6 @@ output
 # data
 data
 
-# scripts
-scripts
-
 # environment variables
 .env
 .env.local

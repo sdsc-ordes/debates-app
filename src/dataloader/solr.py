@@ -2,14 +2,12 @@ import os
 import json
 from pysolr import Solr
 from dotenv import load_dotenv
+import dataloader.merge as merge
 
 load_dotenv()
 
 
 SOLR_URL = os.getenv("SOLR_URL")
-SEGMENT_TYPE_TRANSLATION = "translation"
-SEGMENT_TYPE_ORIGINAL = "transcript"
-SEGMENT_LANGUAGE_ENGLISH = "en"
 
 
 class DataloaderSolrException(Exception):
@@ -41,21 +39,32 @@ def delete_all_documents_in_solr():
 def _map_debate_data(debate_data):
     subtitles = debate_data.get("subtitles")
     subtitles_en = debate_data.get("subtitles_en")
+    segments = debate_data.get("segments")
     debate_extras = {
-        "s3_prefix": debate_data["s3_prefix"],
-        "version_id": debate_data["version"]["version_id"],
-        "version_original": debate_data["version"]["original"],
+        "s3_prefix": debate_data["debate"]["s3_prefix"],
         "debate_type": debate_data["debate"]["type"],
         "debate_session": debate_data["debate"]["session"],
         "debate_public": debate_data["debate"]["public"],
         "debate_schedule": _map_to_solr_date(debate_data["debate"]["schedule"]),
     }
     documents = []
-    for segment in debate_data["segments"]:
-        document_orig = _map_segment(segment, subtitles, debate_extras, SEGMENT_TYPE_ORIGINAL)
-        document_en = _map_segment(segment, subtitles_en, debate_extras, SEGMENT_TYPE_TRANSLATION)
-        documents.append(document_orig)
-        documents.append(document_en)
+    for segment in segments:
+        document_orig = _map_segment(
+            segment=segment,
+            subtitles=subtitles,
+            debate_extras=debate_extras,
+            segment_type=merge.SUBTITLE_TYPE_TRANSCRIPT
+        )
+        if document_orig:
+            documents.append(document_orig)
+        document_en = _map_segment(
+            segment=segment,
+            subtitles=subtitles_en,
+            debate_extras=debate_extras,
+            segment_type=merge.SUBTITLE_TYPE_TRANSLATION
+        )
+        if document_en:
+            documents.append(document_en)
     return documents
 
 
@@ -64,9 +73,13 @@ def _map_segment(segment, subtitles, debate_extras, segment_type):
     document["statement"] = [
         subtitle["content"]
         for subtitle in subtitles if subtitle["segment_nr"] == segment["segment_nr"]]
+    if not document["statement"]:
+        return None
     document ["statement_type"] = segment_type
-    if segment_type == SEGMENT_TYPE_TRANSLATION:
-        document["statement_language"] = SEGMENT_LANGUAGE_ENGLISH
+    if segment_type == merge.SUBTITLE_TYPE_TRANSLATION:
+        document["statement_language"] = "en"
+    else:
+        document["statement_language"] = ""
     for key in segment.keys():
         document[key] = segment[key]
     for key in debate_extras.keys():

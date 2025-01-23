@@ -6,15 +6,21 @@ import importlib.resources as resources
 from datetime import datetime, timezone
 import pytz
 from pymongo import MongoClient
+from bson import ObjectId
 from dotenv import load_dotenv
+import dataloader.merge as merge
 
 load_dotenv()
 
 MONGO_URL = os.getenv("MONGO_URL")
 MONGO_DB = os.getenv("MONGO_DB")
-MONGO_DEBATES_COLLECTION = os.getenv("MONGO_DEBATES_COLLECTION")
+MONGO_DEBATES_COLLECTION = "debates"
+MONGO_SPEAKERS_COLLECTION = "speakers"
+MONGO_SEGMENTS_COLLECTION = "segments"
+MONGO_SUBTITLE_COLLECTION = "subtitles"
 ZURICH_TZ = pytz.timezone('Europe/Zurich')
 LANGUAGE_ENGLISH = "en"
+
 
 
 class DataloaderMongoException(Exception):
@@ -40,19 +46,41 @@ def mongodb_create_debate_collection_with_schema():
         print(result)
 
 
-def mongodb_insert_debate(data_orig, data_en, metadata):
+def mongodb_insert_debate(subtitles_orig, subtitles_en, metadata, segments, speakers):
     """Insert one debate into the mongodb"""
-    debate_data = _get_debate_data(
-        data_orig=data_orig, data_en=data_en, metadata=metadata
-    )
-    try:
-        debate_data_db = _get_document_by_id(debate_id)
-    except Exception as e:
-        pass
-    debate_id = _mongodb_insert_one(debate_data)
+    debate = _prepare_debate_data(metadata)
+    debate_id = _mongodb_insert_one_document(debate, MONGO_DEBATES_COLLECTION)
+    document_speakers = {
+        "debate_id": ObjectId(debate_id),
+        "speakers": _prepare_speakers(speakers)
+    }
+    _mongodb_insert_one_document(document_speakers, MONGO_SPEAKERS_COLLECTION)
+    document_segments = {
+        "debate_id": ObjectId(debate_id),
+        "segments": segments
+    }
+    _mongodb_insert_one_document(document_segments, MONGO_SEGMENTS_COLLECTION)
+    document_subtitles_orig = {
+        "debate_id": ObjectId(debate_id),
+        "subtitles": subtitles_orig,
+        "type": merge.SUBTITLE_TYPE_TRANSCRIPT,
+        "language": None,
+    }
+    _mongodb_insert_one_document(document_subtitles_orig, MONGO_SUBTITLE_COLLECTION)
+    document_subtitles_en = {
+        "debate_id": ObjectId(debate_id),
+        "subtitles": subtitles_en,
+        "type": merge.SUBTITLE_TYPE_TRANSLATION,
+        "language": "en",
+    }
+    _mongodb_insert_one_document(document_subtitles_en, MONGO_SUBTITLE_COLLECTION)
     print(f"Successfully inserted debate into mongodb with id: {debate_id}")
-    debate_data_db = _get_document_by_id(debate_id)
-    return debate_data_db
+    return {
+        "debate": debate,
+        "segments": segments,
+        "subtitles": subtitles_orig,
+        "subtitles_en": subtitles_en,
+    }
 
 
 def mongodb_find_debates():
@@ -65,62 +93,59 @@ def mongodb_find_debates():
         return _get_list_from_cursor(result)
 
 
-def _get_document_by_id(document_id):
-    with MongoClient(MONGO_URL) as client:
-        db = client[MONGO_DB]
-        document = db[MONGO_DEBATES_COLLECTION].find_one({"_id": ObjectId(document_id)})
-        return document
-
-
-def mongodb_find_one_debate(s3_prefix, version_id=None):
+def mongodb_find_one_document(query, collection):
     """Find debates in MongoDB and return s3_prefix and version_id."""
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        query = {"s3_prefix": s3_prefix}
-        if version_id:
-            query["version_id"] = version_id
-        document = db[MONGO_DEBATES_COLLECTION].find_one(query)
+        document = db[collection].find_one(query)
         return document
 
 
-def _mongodb_insert_one(debate_data):
+def mongodb_find_one_debate(s3_prefix, version=None):
+    """Find debates in MongoDB and return s3_prefix and version_id."""
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
-        debate_id = db[MONGO_DEBATES_COLLECTION].insert_one(
-            debate_data
+        document = db[MONGO_DEBATES_COLLECTION].find_one()
+        return document
+
+
+def _mongodb_insert_one_document(document, collection):
+    with MongoClient(MONGO_URL) as client:
+        db = client[MONGO_DB]
+        document_id = db[collection].insert_one(
+            document
         ).inserted_id
-        return debate_id
+        return document_id
 
 
 def mongodb_delete_debates():
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]
         db.drop_collection(MONGO_DEBATES_COLLECTION)
+        db.drop_collection(MONGO_SPEAKERS_COLLECTION)
+        db.drop_collection(MONGO_SUBTITLE_COLLECTION)
+        db.drop_collection(MONGO_SEGMENTS_COLLECTION)
 
 
-def _get_debate_data(data_orig, data_en, metadata):
-    debate_data = {
+def _prepare_speakers(speakers):
+    for speaker in speakers:
+        speaker["name"] = ""
+        speaker["role_tag"] = ""
+    return speakers
+
+
+def _prepare_debate_data(metadata):
+    debate = {
         "s3_prefix": metadata["s3_prefix"],
-        "version": _get_version(),
-        "s3_keys": metadata["s3_keys"],
         "created_at": _format_current_datetime(),
-        "debate": _get_debate(metadata),
-        "speakers": _get_speakers(data_orig),
-        "segments": _get_segments(data_orig),
-        "subtitles": _get_subtitles(data_orig),
-        "subtitles_en": _get_subtitles(data_en, language=LANGUAGE_ENGLISH),
         "s3_keys": metadata["s3_keys"],
         "media": metadata["media"],
+        "schedule": _format_debate_schedule(metadata["schedule"]),
+        "public": metadata["context"]["public"],
+        "type": metadata["context"]["type"],
+        "session": metadata["context"]["session"],
     }
-    return debate_data
-
-def _get_version():
-    version = {
-        "version_id": str(uuid.uuid4()),
-        "original": True
-    }
-    return version
-
+    return debate
 
 
 def _get_list_from_cursor(cursor):
@@ -128,70 +153,6 @@ def _get_list_from_cursor(cursor):
     for document in cursor:
         document_list.append(document)
     return document_list
-
-
-def _get_debate(metadata):
-    debate = {
-      "schedule": _format_debate_schedule(metadata["schedule"]),
-      "public": metadata["context"]["public"],
-      "type": metadata["context"]["type"],
-      "session": metadata["context"]["session"],
-    }
-    return debate
-
-
-def _get_subtitles(data, language=None):
-    subtitles = []
-    for item in data:
-        subtitle = {
-            "index": item["index"],
-            "start": item["start"],
-            "end": item["end"],
-            "content": item["content"],
-            "segment_nr": item["segment_nr"],
-        }
-        if language:
-            subtitle["language"] = language
-        else:
-            subtitle["language"] = ""
-        subtitles.append(subtitle)
-    return subtitles
-
-
-def _get_speakers(data_orig):
-    speaker_ids = {subtitle["speaker_id"] for subtitle in data_orig}
-    speakers = [{
-        "speaker_id": speaker_id,
-        "name": "",
-        "role_tag": "",
-    } for speaker_id in speaker_ids]
-    return speakers
-
-
-def _get_segments(data_orig):
-    segment_nrs = {subtitle["segment_nr"] for subtitle in data_orig}
-    segments = []
-    for i, segment_nr in enumerate(segment_nrs):
-        segment = _get_segment(data_orig, segment_nr)
-        segments.append(segment)
-    return segments
-
-
-def _get_segment(data_orig, segment_nr):
-    subtitles_in_segment = [
-        subtitle for subtitle in data_orig if subtitle["segment_nr"] == segment_nr
-    ]
-    speaker_id = subtitles_in_segment[0]["speaker_id"]
-    segment_nr = subtitles_in_segment[0]["segment_nr"]
-    start = min([subtitle["start"] for subtitle in subtitles_in_segment])
-    end = max([subtitle["end"] for subtitle in subtitles_in_segment])
-    segment = {
-        "speaker_id": speaker_id,
-        "start": start,
-        "end": end,
-        "segment_nr": segment_nr,
-    }
-    return segment
 
 
 def _format_debate_schedule(schedule):

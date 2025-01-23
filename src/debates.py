@@ -12,6 +12,9 @@ import dataloader.solr as dl_solr
 from typing_extensions import Annotated
 from dataloader.s3 import s3Manager
 from dataloader.api import api
+from dataloader.merge import (
+    merge_and_segment, get_speakers_from_segments,
+    assign_segments_to_subtitles)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -32,22 +35,46 @@ def s3_to_mongo_solr(
 ):
     """Get data and metadata for s3_path from S3 and add it to the Mongo DB"""
     try:
+        # get data from s3
         s3 = s3Manager()
         s3_srt_path_orig = f"{s3_prefix}/{s3_prefix}-{SUFFIX_SRT_ORIG}"
-        print(f"expected s3 path for original transcript {s3_srt_path_orig}")
         s3_srt_path_en = f"{s3_prefix}/{s3_prefix}-{SUFFIX_SRT_EN}"
-        print(f"expected s3 path for english translation {s3_srt_path_en}")
         s3_metadata_path = f"{s3_prefix}/{s3_prefix}-{SUFFIX_METADATA}"
-        print(f"expected s3 path for metadata {s3_metadata_path}")
-        raw_data_en = s3.get_s3_data(s3_srt_path_en)
-        raw_data_orig = s3.get_s3_data(s3_srt_path_orig)
-        parsed_data_orig = dl_parse_srt.parse_subtitles(raw_data_orig)
-        parsed_data_en = dl_parse_srt.parse_subtitles(raw_data_en)
+
+        # get srt files
+        raw_srt_en = s3.get_s3_data(s3_srt_path_en)
+        raw_srt_orig = s3.get_s3_data(s3_srt_path_orig)
+
+        # get yml metadata
         raw_metadata = s3.get_s3_data(s3_metadata_path)
+
+        # parse srt into json
+        subtitles_orig = dl_parse_srt.parse_subtitles(raw_srt_orig)
+        subtitles_en = dl_parse_srt.parse_subtitles(raw_srt_en)
+
+        # parse metadata from yml into json
         parsed_metadata = dl_parse_yml.parse_metadata(raw_metadata)
-        debate_data_db = dl_mongo.mongodb_insert_debate(
-            metadata=parsed_metadata, data_orig=parsed_data_orig, data_en=parsed_data_en)
-        dl_solr.update_solr(debate_data_db)
+
+        # merge subtitles to derive segments
+        segments = merge_and_segment(subtitles_en, subtitles_orig)
+
+        # get speakers list from segments
+        speakers = get_speakers_from_segments(segments)
+
+        # enrich subtitles be segment_nr
+        subtitles_orig = assign_segments_to_subtitles(subtitles_orig, segments)
+        subtitles_en = assign_segments_to_subtitles(subtitles_en, segments)
+
+        # update mongodb
+        dl_file.write_parsed_data_to_file(speakers, "speakers.json")
+        debate_data = dl_mongo.mongodb_insert_debate(
+            metadata=parsed_metadata,
+            subtitles_orig=subtitles_orig,
+            subtitles_en=subtitles_en,
+            segments=segments,
+            speakers=speakers
+        )
+        dl_solr.update_solr(debate_data)
     except Exception as e:
         print(f"S3 data could not be loaded into secondary databases. An exception occurred: {e}")
         _print_traceback(debug)
@@ -61,7 +88,7 @@ def mongo_to_solr(
 ):
     """Get document from mongodb and add it to Solr"""
     try:
-        debate_data = dl_mongo.mongodb_find_one_debate(s3_prefix, version_id)
+        debate_data = dl_mongo.mongodb_find_one_document(s3_prefix, version_id)
         dl_solr.update_solr(debate_data)
     except Exception as e:
         print(f"An error occurred during mongo to solr: {e}")
@@ -103,7 +130,7 @@ def mongo_get(
             else:
                 print(f"No debate item has not been found.")
         if s3_prefix and version_id:
-            debate_data = dl_mongo.mongodb_find_one_debate(s3_prefix, version_id)
+            debate_data = dl_mongo.mongodb_find_one_document(s3_prefix, version_id)
             if debate_data:
                 print(f"Found debate for s3_prefix {debate_data['s3_prefix']} and version_id {debate_data['version_id']}")
             else:

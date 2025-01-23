@@ -21,7 +21,6 @@ source .venv/bin/activate
 # must match the docker compose settings for the services
 SOLR_URL=http://localhost:8010/solr/debates/
 MONGO_DB=debates
-MONGO_VIDEO_COLLECTION=videos
 S3_BUCKET_NAME=debates
 S3_ACCESS_KEY=[your-S3-access-key]
 S3_SECRET_KEY=[your-S3-secret-key]
@@ -40,6 +39,11 @@ PROD_S3_BUCKET_NAME=[your-prod-S3-bucket-name]
 PROD_S3_ACCESS_KEY=[your-prod-S3-access-key]
 PROD_S3_SECRET_KEY=[your-prod-S3-secret-key]
 PROD_S3_REGION_NAME=[your-prod-S3-region-name]
+
+# suffixes for S3 Pathes
+SUFFIX_SRT_ORIG=transcription_original.srt
+SUFFIX_SRT_EN=translation_original_english.srt
+SUFFIX_METADATA=metadata.yml
 ```
 
 ## Use
