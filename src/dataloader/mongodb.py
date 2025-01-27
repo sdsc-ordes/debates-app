@@ -118,6 +118,16 @@ def _mongodb_insert_one_document(document, collection):
         return document_id
 
 
+def update_document(query, values, collection):
+    with MongoClient(MONGO_URL) as client:
+        db = client[MONGO_DB]
+        result = db[collection].update_one(
+            query,
+            values,
+        )
+        print(result)
+
+
 def mongodb_delete_debates():
     with MongoClient(MONGO_URL) as client:
         db = client[MONGO_DB]

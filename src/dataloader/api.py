@@ -1,9 +1,11 @@
 from fastapi import HTTPException, FastAPI
 from pydantic import BaseModel
+from enum import Enum
 from typing import List
 
 from dataloader.s3 import s3Manager
 import dataloader.mongodb as mongodb
+import dataloader.solr as solr
 
 from fastapi import FastAPI
 from bson import ObjectId
@@ -41,6 +43,45 @@ class S3MediaUrlResponse(BaseModel):
 
 class S3MetadataRequest(BaseModel):
     prefix: str
+
+
+class Speaker(BaseModel):
+    speaker_id: str
+    name: str
+    role_tag: str
+
+
+class Subtitle(BaseModel):
+    index: int
+    start: float
+    end: float
+    content: str
+    speaker_id: str
+    segment_nr: int
+
+
+class Segment(BaseModel):
+    speaker_id: str
+    start: float
+    end: float
+    segment_nr: int
+
+
+class UpdateSpeakersRequest(BaseModel):
+    prefix: str
+    speakers: List[Speaker]
+
+
+class EnumSubtitleType(str, Enum):
+    transcript = "Transcript"
+    translation = "Translation"
+
+
+class UpdateSubtitlesRequest(BaseModel):
+    prefix: str
+    segmentNr: int
+    subtitles: List[Subtitle]
+    subtitleType: EnumSubtitleType
 
 
 @api.post("/get-media-urls")
@@ -98,6 +139,61 @@ async def mongo_metadata(request: S3MetadataRequest):
         "subtitles": _clean_document(subtitles),
         "subtitles_en": _clean_document(subtitles_en),
     }
+
+
+@api.post("/update-speakers")
+async def mongo_metadata(request: UpdateSpeakersRequest):
+    """
+    Update speakers
+    """
+    debate = mongodb.mongodb_find_one_document(
+        { "s3_prefix": request.prefix }, mongodb.MONGO_DEBATES_COLLECTION
+    )
+    debate_id = debate["_id"]
+    speakers_as_dicts = [speaker.dict() for speaker in request.speakers]
+    mongodb.update_document(
+        query={ "debate_id": debate_id },
+        values={ "$set": { "speakers": speakers_as_dicts } },
+        collection=mongodb.MONGO_SPEAKERS_COLLECTION
+    )
+    print(f"speakers for {request.prefix} have been updated on mongodb")
+    solr.update_speakers(s3_prefix=request.prefix, speakers=speakers_as_dicts)
+    print(f"speakers for {request.prefix} have been updated on solr")
+
+
+@api.post("/update-subtitles")
+async def mongo_metadata(request: UpdateSubtitlesRequest):
+    """
+    Update subtitles
+    """
+    print("in update subtitles")
+    print(request)
+    debate = mongodb.mongodb_find_one_document(
+        { "s3_prefix": request.prefix }, mongodb.MONGO_DEBATES_COLLECTION
+    )
+    debate_id = debate["_id"]
+    subtitles_as_dicts = [subtitle.dict() for subtitle in request.subtitles]
+    if request.subtitleType == EnumSubtitleType.transcript:
+        values = { "subtitles": subtitles_as_dicts }
+    else:
+        values = { "subtitles_en": subtitles_as_dicts }
+    if request.subtitleType == EnumSubtitleType.transcript:
+        subtitle_type = merge.SUBTITLE_TYPE_TRANSCRIPT
+    elif request.subtitleType == EnumSubtitleType.translation:
+        subtitle_type = merge.SUBTITLE_TYPE_TRANSLATION
+    mongodb.update_document(
+        query={ "debate_id": debate_id, "type": subtitle_type },
+        values={ "$set": values },
+        collection=mongodb.MONGO_SUBTITLE_COLLECTION,
+    )
+    print(f"subtitles for {request.prefix} have been updated on mongodb")
+    solr.update_segment(
+        s3_prefix=request.prefix,
+        segment_nr=request.segmentNr,
+        subtitles=subtitles_as_dicts,
+        subtitle_type=subtitle_type,
+    )
+    print(f"subtitles for {request.prefix} have been updated on solr")
 
 
 def _clean_document(document):
