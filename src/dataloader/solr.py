@@ -65,14 +65,9 @@ def update_segment(s3_prefix, segment_nr, subtitles, subtitle_type):
     print(query)
     solr = Solr(SOLR_URL, always_commit=True)
     results = solr.search(query)
-    print("solr response")
-    print(results.hits)
-    print(statement)
     if results.hits > 0:
         # Prepare the update payload
         for doc in results:
-            print("doc in results")
-            print(doc)
             updated_doc = {
                 "id": doc["id"],
                 "statement": {"set": statement},

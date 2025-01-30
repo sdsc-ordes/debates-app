@@ -90,6 +90,7 @@ async def get_media_urls(request: S3MediaUrlRequest):
     presigned_urls = []
     for object_key in request.objectKeys:
         url = s3_client.get_presigned_url(request.prefix, object_key)
+        print(object_key)
         presigned_urls.append({
             "url": url,
             "label": object_key,

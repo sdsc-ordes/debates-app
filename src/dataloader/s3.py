@@ -1,6 +1,6 @@
 import boto3
 import os
-from botocore.exceptions import NoCredentialsError
+from botocore.exceptions import NoCredentialsError, DataNotFoundError
 from botocore.client import Config
 
 from dotenv import load_dotenv
@@ -71,6 +71,7 @@ class s3Manager:
         """
         try:
             object_key = f"{prefix}/{key}"
+            print(f"uploading data for s3 key {object_key}")
             response = self.s3.generate_presigned_url(
                 "get_object",
                 Params={
@@ -82,6 +83,26 @@ class s3Manager:
             )
             frontend_url = response.replace(S3_SERVER, S3_FRONTEND_BASE_URL)
             return frontend_url
+        except DataNotFoundError:
+            print(f"s3 key not found: {object_key}")
         except NoCredentialsError:
             print("Credentials not available.")
             return None
+
+    def upload_data(self, file_path, s3_path):
+        """
+        Uploads a file to the S3 bucket.
+
+        :param file_path: Path to the file to upload (local file).
+        :param s3_path: Path in the S3 bucket where the file should be uploaded.
+        :raises NoCredentialsError: If credentials are invalid or missing.
+        """
+        try:
+            self.s3.upload_file(file_path, self.bucket_name, s3_path)
+            print(f"File '{file_path}' successfully uploaded to '{s3_path}' in bucket '{self.bucket_name}'.")
+        except FileNotFoundError:
+            print(f"Error: The file '{file_path}' was not found.")
+        except NoCredentialsError:
+            print("Error: Credentials are not available.")
+        except Exception as e:
+            print(f"An error occurred: {e}")

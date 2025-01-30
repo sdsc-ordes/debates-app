@@ -40,6 +40,9 @@ def s3_to_mongo_solr(
         s3_srt_path_orig = f"{s3_prefix}/{s3_prefix}-{SUFFIX_SRT_ORIG}"
         s3_srt_path_en = f"{s3_prefix}/{s3_prefix}-{SUFFIX_SRT_EN}"
         s3_metadata_path = f"{s3_prefix}/{s3_prefix}-{SUFFIX_METADATA}"
+        print(s3_metadata_path)
+        print(s3_srt_path_en)
+        print(s3_srt_path_orig)
 
         # get srt files
         raw_srt_en = s3.get_s3_data(s3_srt_path_en)
