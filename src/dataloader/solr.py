@@ -2,12 +2,26 @@ import os
 import json
 from pysolr import Solr
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from typing import List
 import dataloader.merge as merge
 
 load_dotenv()
 
 
 SOLR_URL = os.getenv("SOLR_URL")
+SOLR_SELECT_URL = f"{SOLR_URL}select"
+
+class FacetFilter(BaseModel):
+    facetField: str
+    facetValue: str
+
+
+class SolrRequest(BaseModel):
+    queryTerm: str
+    sortBy: str
+    facetFields: List[str]
+    facetFilters: List[FacetFilter]
 
 
 class DataloaderSolrException(Exception):
@@ -74,6 +88,48 @@ def update_segment(s3_prefix, segment_nr, subtitles, subtitle_type):
             }
             result = solr.add([updated_doc])
             print(result)
+
+
+def search_solr(solr_request: SolrRequest):
+    """Fetch search results from Solr"""
+    solr = Solr(SOLR_URL, timeout=10)
+
+    params = {
+        "wt": "json",
+        "indent": "true",
+        "df": "statement",
+        "hl": "true" if solr_request.queryTerm else "false",
+        "hl.snippets": 10,
+        "rows": 100,
+        "start": 0,
+    }
+
+    # Add facet fields if provided
+    if solr_request.facetFields:
+        params["facet"] = "true"
+        params["facet.field"] = solr_request.facetFields  # List of facet fields
+
+    # Add facet filters (fq) if provided
+    if solr_request.facetFilters:
+        params["fq"] = [
+            f'{filter.facetField}:"{filter.facetValue}"' for filter in solr_request.facetFilters
+        ]
+
+    # Add sorting if provided
+    if solr_request.sortBy:
+        params["sort"] = solr_request.sortBy
+
+    print(params)
+    print(SOLR_SELECT_URL)
+
+    # Pass `queryTerm` as the first argument
+    result = solr.search(solr_request.queryTerm if solr_request.queryTerm else "*:*", **params)
+
+    print(result.__dict__)
+    for doc in result:
+        print(doc["id"])
+
+    return result
 
 
 def _get_statement_from_subtitles(segment_nr, subtitles):

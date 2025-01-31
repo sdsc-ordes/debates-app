@@ -1,4 +1,4 @@
-from fastapi import HTTPException, FastAPI
+from fastapi import FastAPI
 from pydantic import BaseModel
 from enum import Enum
 from typing import List
@@ -8,7 +8,6 @@ import dataloader.mongodb as mongodb
 import dataloader.solr as solr
 
 from fastapi import FastAPI
-from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from pprint import pprint
 import dataloader.merge as merge
@@ -82,6 +81,18 @@ class UpdateSubtitlesRequest(BaseModel):
     segmentNr: int
     subtitles: List[Subtitle]
     subtitleType: EnumSubtitleType
+
+
+class FacetFilter(BaseModel):
+    facetField: str
+    facetValue: str
+
+
+class SolrRequest(BaseModel):
+    queryTerm: str
+    sortBy: str
+    facetFields: List[str]
+    facetFilters: List[FacetFilter]
 
 
 @api.post("/get-media-urls")
@@ -195,6 +206,16 @@ async def mongo_metadata(request: UpdateSubtitlesRequest):
         subtitle_type=subtitle_type,
     )
     print(f"subtitles for {request.prefix} have been updated on solr")
+
+
+@api.post("/search-solr")
+async def search_solr(request: solr.SolrRequest):
+    """Fetch search results from Solr"""
+    solr_response = solr.search_solr(
+        solr_request=request
+    )
+    return solr_response
+
 
 
 def _clean_document(document):
