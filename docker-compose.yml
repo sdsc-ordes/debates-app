@@ -141,14 +141,20 @@ services:
         target: /etc/nginx/conf.d/default.conf
         read_only: true
     secrets:
-      - htpasswd
+      - htpasswd_combined
+      - htpasswd_editor
+      - htpasswd_reader
       - ssl_private_key
     profiles:
       - vm
 
 secrets:
-  htpasswd:
-    file: /etc/apache2/.htpasswd
+  htpasswd_combined:
+    file: /etc/apache2/combined.htpasswd
+  htpasswd_editor:
+    file: /etc/apache2/editor.htpasswd
+  htpasswd_reader:
+    file: /etc/apache2/reader.htpasswd
   ssl_private_key:
     file: /etc/letsencrypt/archive/debates.swisscustodian.ch/privkey1.pem
 
