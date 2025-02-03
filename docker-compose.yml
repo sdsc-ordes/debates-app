@@ -76,10 +76,6 @@ services:
     networks:
       - debates_network
     environment:
-      PUBLIC_SOLR_URL: ${SOLR_SELECT_URL}
-      SECRET_MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
-      SECRET_MONGO_DB: ${MONGO_DB}
-      PUBLIC_MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
       PUBLIC_BACKEND_SERVER: http://dataloader:8000
     command: ["node", "build"]
     profiles:
@@ -98,12 +94,14 @@ services:
       SOLR_URL: ${SOLR_BASE_URL}
       MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
       MONGO_DB: ${MONGO_DB}
-      MONGO_VIDEO_COLLECTION: ${MONGO_VIDEO_COLLECTION}
       S3_SERVER: ${S3_SERVER}
       S3_FRONTEND_BASE_URL: ${S3_FRONTEND_BASE_URL}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
+      SUFFIX_SRT_ORIG: ${SUFFIX_SRT_ORIG}
+      SUFFIX_SRT_EN: ${SUFFIX_SRT_EN}
+      SUFFIX_METADATA: ${SUFFIX_METADATA}
       API_HOST: "0.0.0.0"
     ports:
       - 8000:8000
