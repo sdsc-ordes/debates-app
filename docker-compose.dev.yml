@@ -7,11 +7,11 @@ services:
       - ${MINIO_PATH}:/data
     ports:
       - 127.0.0.1:9000:9000
-      - 127.0.0.1:9001:9001
+      - 9001:9001
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
-    command: server --address 127.0.0.1:9000 --console-address 127.0.0.1:9001 /data
+    command: server --address 0.0.0.0:9000 --console-address :9001 /data
     networks:
       - debates_network
 
