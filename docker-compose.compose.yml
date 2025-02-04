@@ -1,0 +1,117 @@
+name: debates
+
+services:
+  minio-instance:
+    image: minio/minio
+    volumes:
+      - ${MINIO_PATH}:/data
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    command: server --address 0.0.0.0:9000 --console-address :9001 /data
+    networks:
+      - debates_network
+
+  solr:
+    build:
+      context: ./solr
+    ports:
+      - 8983:8983
+    networks:
+      - debates_network
+    volumes:
+      - ${SOLR_PATH}:/var/solr
+    command:
+      - solr-precreate
+      - debates
+      - /opt/solr/server/solr/configsets/debates
+
+  mongodb-instance:
+    image: mongo:7.0.8
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: debates
+    networks:
+      - debates_network
+    volumes:
+      - ${MONGO_PATH}:/data/db
+
+  mongodb-express:
+    image: mongo-express:1.0.2-18
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_OPTIONS_EDITORTHEME: "ambiance"
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+    networks:
+      - debates_network
+    depends_on:
+      - mongodb-instance
+
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - 3000:3000
+    depends_on:
+      - dataloader
+    networks:
+      - debates_network
+    command: ["node", "build"]
+
+
+  dataloader:
+    build:
+      context: ./dataloader
+      dockerfile: Dockerfile
+    networks:
+      - debates_network
+    environment:
+      SOLR_URL: http://solr:8983/solr/debates/
+      MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
+      MONGO_DB: debates
+      S3_SERVER: http://minio-instance:9000
+      S3_FRONTEND_BASE_URL: http://localhost:80
+      S3_BUCKET_NAME: debates
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      SUFFIX_SRT_ORIG: transcription_original.srt
+      SUFFIX_SRT_EN: translation_original_english.srt
+      SUFFIX_METADATA: metadata.yml
+      API_HOST: "0.0.0.0"
+    ports:
+      - 8000:8000
+    depends_on:
+      - minio-instance
+      - mongodb-instance
+      - solr
+
+  reverse-proxy:
+    image: nginx:alpine
+    networks:
+      - debates_network
+    ports:
+      - 443:443
+      - 80:80
+    volumes:
+      - type: bind
+        source: ./nginx/nginx.dev.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    depends_on:
+      - frontend
+      - minio-instance
+
+networks:
+  debates_network:
+    driver: bridge
