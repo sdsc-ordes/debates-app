@@ -1,5 +1,4 @@
 import typer
-import sys
 import traceback
 import uvicorn
 import os

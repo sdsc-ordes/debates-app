@@ -15,15 +15,6 @@ import dataloader.merge as merge
 api = FastAPI()
 
 
-# Set CORS policy to allow your frontend's origin
-api.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Replace with your frontend origin
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 class S3MediaUrlRequest(BaseModel):
     prefix: str
     objectKeys: list[str]
