@@ -13,12 +13,13 @@ PROD_S3_BUCKET_NAME = os.getenv("PROD_S3_BUCKET_NAME")
 PROD_S3_REGION_NAME = os.getenv("PROD_S3_REGION_NAME")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
-S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 S3_SERVER = os.getenv("S3_SERVER")
 S3_FRONTEND_BASE_URL = os.getenv("S3_FRONTEND_BASE_URL")
-SUFFIX_SRT_ORIG = os.getenv("SUFFIX_SRT_ORIG")
-SUFFIX_SRT_EN = os.getenv("SUFFIX_SRT_EN")
-SUFFIX_METADATA = os.getenv("SUFFIX_METADATA")
+
+S3_BUCKET_NAME="debates"
+SUFFIX_SRT_ORIG="transcription_original.srt"
+SUFFIX_SRT_EN="translation_original_english.srt"
+SUFFIX_METADATA="metadata.yml"
 
 
 class s3Manager:

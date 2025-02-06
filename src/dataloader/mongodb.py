@@ -13,7 +13,8 @@ import dataloader.merge as merge
 load_dotenv()
 
 MONGO_URL = os.getenv("MONGO_URL")
-MONGO_DB = os.getenv("MONGO_DB")
+
+MONGO_DB = "debates"
 MONGO_DEBATES_COLLECTION = "debates"
 MONGO_SPEAKERS_COLLECTION = "speakers"
 MONGO_SEGMENTS_COLLECTION = "segments"

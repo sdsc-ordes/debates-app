@@ -9,7 +9,7 @@ import dataloader.mongodb as dl_mongo
 import dataloader.file as dl_file
 import dataloader.solr as dl_solr
 from typing_extensions import Annotated
-from dataloader.s3 import s3Manager
+from dataloader.s3 import s3Manager, SUFFIX_METADATA, SUFFIX_SRT_EN, SUFFIX_SRT_ORIG
 from dataloader.api import api
 from dataloader.merge import (
     merge_and_segment, get_speakers_from_segments,
@@ -19,9 +19,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 API_HOST = os.getenv("API_HOST")
-SUFFIX_SRT_ORIG = os.getenv("SUFFIX_SRT_ORIG")
-SUFFIX_SRT_EN = os.getenv("SUFFIX_SRT_EN")
-SUFFIX_METADATA = os.getenv("SUFFIX_METADATA")
 
 
 cli = typer.Typer()
