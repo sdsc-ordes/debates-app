@@ -72,11 +72,9 @@ def update_speakers(s3_prefix, speakers):
 
 
 def update_segment(s3_prefix, segment_nr, subtitles, subtitle_type):
-    print("update solr")
     statement = _get_statement_from_subtitles(segment_nr, subtitles)
     # Find the document using the composite query
     query = f'statement_type:{subtitle_type} AND s3_prefix:{s3_prefix} AND segment_nr:{segment_nr}'
-    print(query)
     solr = Solr(SOLR_URL, always_commit=True)
     results = solr.search(query)
     if results.hits > 0:
@@ -87,7 +85,6 @@ def update_segment(s3_prefix, segment_nr, subtitles, subtitle_type):
                 "statement": {"set": statement},
             }
             result = solr.add([updated_doc])
-            print(result)
 
 
 def search_solr(solr_request: SolrRequest):
@@ -119,15 +116,8 @@ def search_solr(solr_request: SolrRequest):
     if solr_request.sortBy:
         params["sort"] = solr_request.sortBy
 
-    print(params)
-    print(SOLR_SELECT_URL)
-
     # Pass `queryTerm` as the first argument
     result = solr.search(solr_request.queryTerm if solr_request.queryTerm else "*:*", **params)
-
-    print(result.__dict__)
-    for doc in result:
-        print(doc["id"])
 
     return result
 
