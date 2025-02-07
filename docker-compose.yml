@@ -42,7 +42,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DB}
+      MONGO_INITDB_DATABASE: debates
     networks:
       - debates_network
     volumes:
@@ -93,15 +93,10 @@ services:
     environment:
       SOLR_URL: ${SOLR_BASE_URL}
       MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
-      MONGO_DB: ${MONGO_DB}
       S3_SERVER: ${S3_SERVER}
       S3_FRONTEND_BASE_URL: ${S3_FRONTEND_BASE_URL}
-      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
-      SUFFIX_SRT_ORIG: ${SUFFIX_SRT_ORIG}
-      SUFFIX_SRT_EN: ${SUFFIX_SRT_EN}
-      SUFFIX_METADATA: ${SUFFIX_METADATA}
       API_HOST: "0.0.0.0"
     ports:
       - 8000:8000
