@@ -1,6 +1,3 @@
-[submodule "solr"]
-	path = solr
-	url = git@github.com:sdsc-ordes/debates-solr.git
 [submodule "frontend"]
 	path = frontend
 	url = git@github.com:sdsc-ordes/debates-ui.git
