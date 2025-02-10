@@ -1,0 +1,238 @@
+@import '@fontsource/fira-mono';
+
+:root {
+	--column-width: 42rem;
+	--column-margin-top: 4rem;
+	font-family: var(--font-body);
+	color: var(--color-text);
+	/* New Variables */
+	--primary-color: #2849A1;
+	--primary-dark-color: #182C61;
+	--secondary-color: #FF5500;
+	--secondary-dark-color: #e13813;
+	--background-color: #f8f9fa;
+	--on-primary: #F6F7FD;
+	--text-color: #1E1E1E;
+	--heading-font: 'Helvetica-Neue', sans-serif;
+	--body-font: 'Helvetica-Neue', sans-serif;
+}
+
+body {
+	font-family: var(--body-font);
+	font-size: 16px;
+	line-height: 1.5;
+	color: var(--text-color);
+	background-color: var(--background-color);
+}
+
+/* Card Styles */
+.card-title-large {
+	font-family: var(--body-font);
+	font-size: 22px;
+	color: var(--text-color);
+	line-height: 1.5;
+}
+
+.card-body-large {
+	font-family: var(--body-font);
+	font-size: 12px;
+	color: var(--text-color);
+	line-height: 1.5;
+}
+
+.card-title-small {
+	font-family: var(--body-font);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+
+.card-subtle {
+	font-family: var(--body-font);
+	font-size: 12px;
+	color: grey;
+	line-height: 16px;
+}
+
+/* Highlighted Text */
+em {
+	color: var(--secondary-color);
+} 
+
+/* Button Styles */
+.button-primary {
+	background-color: var(--primary-color);
+	color: var(--on-primary);
+	border: none;
+	padding: 5px 10px;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	display: inline-flex;
+	align-items: center;  
+	justify-content: center; 
+}
+
+.button-primary:hover {
+	background-color: var(--primary-dark-color);
+}
+
+.button-primary-dark {
+	background-color: var(--primary-dark-color);
+	color: var(--on-primary);
+	border: none;
+	padding: 5px 10px;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	display: inline-flex;
+	align-items: center;  
+	justify-content: center; 
+}
+
+.button-primary-dark:hover {
+	background-color: var(--primary-color);
+}
+
+.button-highlight{
+	background-color: var(--secondary-color);
+	color: var(--on-primary);
+	border: none;
+	padding: 5px 10px;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	display: inline-flex;
+	align-items: center;  
+	justify-content: center; 
+}
+
+.button-highlight:hover {
+	background-color: var(--secondary-dark-color);
+}
+
+.button-primary i {
+	margin-right: 4px;
+	font-size: 12px;
+	color: inherit;
+	display: inline-block;
+	vertical-align: middle;
+	display: flex;
+    align-items: center;
+	transition: background-color 0.3s;
+
+}
+
+.secondary-button{
+	color: var(--text-color);
+	background-color: var(--on-primary);
+	border: 1px solid var(--primary-color);;
+	padding: 0 10px;
+	height: 20px;
+	border-radius: 10px;
+	font-size: 12px;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.3s, color 0.3s;
+}
+
+.secondary-button:hover {
+	background-color: var(--primary-color);
+	color: var(--on-primary);
+}
+
+.save-button {
+    /* width: 30%; */
+    padding: 5px 5px;
+    background-color: var(--secondary-color);
+    color: var(--on-primary);
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .save-button:hover {
+    background-color: var(--secondary-dark-color);
+  }
+
+  h1 {
+	font-family: var(--body-font);
+	font-size: 36px;
+	color: var(--text-color);
+	line-height: 1.5;
+	font-weight: bold;
+	padding-top: 3rem;
+}
+
+h2,
+p {
+	font-weight: 400;
+}
+
+p {
+	line-height: 1.5;
+}
+
+a {
+	color: var(--color-theme-1);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+h2 {
+	font-size: 1.5rem;
+}
+
+pre {
+	font-size: 16px;
+	font-family: var(--font-mono);
+	background-color: rgba(255, 255, 255, 0.45);
+	border-radius: 3px;
+	box-shadow: 2px 2px 6px rgb(255 255 255 / 25%);
+	padding: 0.5em;
+	overflow-x: auto;
+	color: var(--color-text);
+}
+
+.text-column {
+	display: flex;
+	max-width: 1000px;
+	flex: 0.6;
+	flex-direction: column;
+	justify-content: center;
+	margin: 0 auto;
+}
+
+input,
+button {
+	font-size: inherit;
+	font-family: inherit;
+}
+
+button:focus:not(:focus-visible) {
+	outline: none;
+}
+
+@media (min-width: 720px) {
+	h1 {
+		font-size: 2.4rem;
+	}
+}
+
+.visually-hidden {
+	border: 0;
+	clip: rect(0 0 0 0);
+	height: auto;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+	white-space: nowrap;
+}
