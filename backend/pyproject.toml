@@ -1,0 +1,41 @@
+[project]
+name = "srt-dataloader"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "sabinem", email = "5292683+sabinem@users.noreply.github.com" }
+]
+dependencies = [
+    "typer>=0.12.5",
+    "srt>=3.5.3",
+    "python-dotenv>=1.0.1",
+    "pymongo>=4.10.1",
+    "requests>=2.32.3",
+    "pysolr>=3.10.0",
+    "boto3>=1.35.49",
+    "jsonschema>=4.23.0",
+    "pyyaml>=6.0.2",
+    "pytz>=2024.2",
+    "fastapi[standard]>=0.115.4",
+]
+readme = "README.md"
+requires-python = ">= 3.11"
+
+[project.scripts]
+"srt-dataloader" = "srt_dataloader:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "ipython>=8.28.0",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/srt_dataloader"]
