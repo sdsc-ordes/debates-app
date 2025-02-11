@@ -6,7 +6,7 @@ services:
     volumes:
       - ${MINIO_PATH}:/data
     ports:
-      - ${LOCAL_HOST-}9000:9000
+      - 9000:9000
       - 9001:9001
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY}
@@ -22,12 +22,6 @@ services:
       - 8983:8983
     networks:
       - debates_network
-    healthcheck:
-      test: curl --max-time 10 -f http://localhost:8983 || exit 1
-      start_period: 60s
-      interval: 10s
-      timeout: 10s
-      retries: 5
     volumes:
       - ${SOLR_PATH}:/var/solr
     command:
@@ -38,7 +32,7 @@ services:
   mongodb-instance:
     image: mongo:7.0.8
     ports:
-      - ${LOCAL_HOST-}27017:27017
+      - 27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
@@ -62,8 +56,6 @@ services:
       - debates_network
     depends_on:
       - mongodb-instance
-    profiles:
-      - compose
 
   frontend:
     build:
@@ -71,23 +63,15 @@ services:
     ports:
       - 3000:3000
     depends_on:
-      - solr
-      - mongodb-instance
+      - dataloader
     networks:
       - debates_network
-    environment:
-      PUBLIC_BACKEND_SERVER: http://dataloader:8000
     command: ["node", "build"]
-    profiles:
-      - vm
-      - compose
 
   dataloader:
     build:
       context: ./dataloader
       dockerfile: Dockerfile
-    stdin_open: true
-    tty: true
     networks:
       - debates_network
     environment:
@@ -100,9 +84,10 @@ services:
       API_HOST: "0.0.0.0"
     ports:
       - 8000:8000
-    profiles:
-      - vm
-      - compose
+    depends_on:
+      - minio-instance
+      - mongodb-instance
+      - solr
 
   reverse-proxy:
     image: nginx:alpine
@@ -125,8 +110,6 @@ services:
       - htpasswd_editor
       - htpasswd_reader
       - ssl_private_key
-    profiles:
-      - vm
 
 secrets:
   htpasswd_combined:
