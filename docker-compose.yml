@@ -133,7 +133,7 @@ services:
       - 80:80
     volumes:
       - type: bind
-        source: /etc/letsencrypt/archive/debates.swisscustodian.ch/cert1.pem
+        source: /etc/letsencrypt/archive/debates.swisscustodian.ch/cert3.pem
         target: /etc/nginx/ssl/debates.swisscustodian.ch.cert
         read_only: true
       - type: bind
@@ -156,7 +156,7 @@ secrets:
   htpasswd_reader:
     file: /etc/apache2/reader.htpasswd
   ssl_private_key:
-    file: /etc/letsencrypt/archive/debates.swisscustodian.ch/privkey1.pem
+    file: /etc/letsencrypt/archive/debates.swisscustodian.ch/privkey3.pem
 
 networks:
   debates_network:
