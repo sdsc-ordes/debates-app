@@ -91,10 +91,10 @@ services:
     networks:
       - debates_network
     environment:
-      SOLR_URL: ${SOLR_BASE_URL}
+      SOLR_URL: http://proxy:80/solr/debates/
       MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb-instance:27017/
-      S3_SERVER: ${S3_SERVER}
-      S3_FRONTEND_BASE_URL: ${S3_FRONTEND_BASE_URL}
+      S3_SERVER: http://minio-instance:9000
+      S3_FRONTEND_BASE_URL: https://debates.swisscustodian.ch
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       API_HOST: "0.0.0.0"
@@ -103,19 +103,6 @@ services:
     profiles:
       - vm
       - compose
-
-  proxy:
-    build:
-      context: ./proxy
-    depends_on:
-      solr:
-        condition: service_healthy
-    networks:
-      - debates_network
-    ports:
-      - "8010:80"
-    environment:
-      - SOLR_URL=http://solr:8983/solr
 
   reverse-proxy:
     image: nginx:alpine
