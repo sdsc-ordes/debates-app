@@ -1,0 +1,69 @@
+site_name: Politial Debates
+site_url: https://github.com/sdsc-ordes
+repo_url: https://github.com/sdsc-ordes/debates-app
+repo_name: sdsc-ordes/debates-app
+docs_dir: docs
+use_directory_urls: false
+plugins:
+  - search
+  - link-marker
+  - neoteroi.mkdocsoad:
+      use_pymdownx: true
+extra_css:
+  - stylesheets/mkdocsoad.css
+
+theme:
+  name: material
+  logo: static/logo/political_debates_logo.png
+  features:
+    - navigation.instant
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: orange
+  features:
+    - content.tooltips
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.blocks.caption
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.mark
+  - pymdownx.snippets:
+      auto_append:
+        - includes/glossary.md
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+copyright: |
+  &copy; 2023 - 2024 SDSC
+
+# Page tree
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Processing Pipeline: processing.md
+  - Dataloader: dataloader.md
+  - WebUI: webui.md
+  - Backend API: api.md
+  - Installation:
+    - Options: install/options.md
+    - Docker Compose Setup: install/compose.md
+    - Server Setup: install/server.md
+    - Development: install/development.md
+  - Roadmap: roadmap.md
+

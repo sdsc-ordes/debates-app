@@ -69,7 +69,6 @@ services:
       - debates_network
     command: ["node", "build"]
 
-
   dataloader:
     build:
       context: ./dataloader
