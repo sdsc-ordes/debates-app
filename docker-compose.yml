@@ -89,6 +89,15 @@ services:
       - mongodb-instance
       - solr
 
+  docs:
+    build:
+      context: ./docs
+      dockerfile: Dockerfile
+    networks:
+      - debates_network
+    ports:
+      - 8001:8000
+
   reverse-proxy:
     image: nginx:alpine
     networks:
