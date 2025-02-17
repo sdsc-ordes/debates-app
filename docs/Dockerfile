@@ -29,4 +29,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENTRYPOINT []
 
 # Uses `--host 0.0.0.0` to allow access from outside the container
-CMD ["mkdocs", "serve", "-a", "0.0.0.0"]
+CMD ["mkdocs", "serve"]
