@@ -1,3 +1,8 @@
 data
 build
+
+# Credentials
 .env
+
+# Docs
+docs/site/
