@@ -1,6 +1,6 @@
 # WebUI
 
-## Archtitecture
+## Architecture
 
 - The User Interface talks to the Backend via API. See [API Documentation](api.md)
 - The Web Ui is build with [Sveltekit](https://svelte.dev/)

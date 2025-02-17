@@ -1,6 +1,7 @@
 # API Documentation
 
-The frontend of the debates-app communicates with the backend via an API: the following routes are currently implemented:
+The API is served by the [backend](dataloader.md#start-api-server) to the [frontend](webui.md):
+the following routes are currently implemented:
 
 - **POST /get-media-urls**: gets presigned urls for the media to play from S3, needs S3 path of the media
 - **POST /get-metadata**: gets all metadata from the MongoDB
