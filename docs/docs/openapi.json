@@ -47,7 +47,6 @@
         "/mongo-metadata": {
             "post": {
                 "summary": "Mongo Metadata",
-                "description": "Get Metadata for Debates Object: get full debate with speakers, segments and subtitles",
                 "operationId": "mongo_metadata_mongo_metadata_post",
                 "requestBody": {
                     "content": {
@@ -64,7 +63,9 @@
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {}
+                                "schema": {
+                                    "$ref": "#/components/schemas/MongoMetadataResponse"
+                                }
                             }
                         }
                     },
@@ -121,6 +122,58 @@
     },
     "components": {
         "schemas": {
+            "DebateDocument": {
+                "properties": {
+                    "s3_prefix": {
+                        "type": "string",
+                        "title": "S3 Prefix"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "s3_keys": {
+                        "items": {
+                            "$ref": "#/components/schemas/S3Key"
+                        },
+                        "type": "array",
+                        "title": "S3 Keys"
+                    },
+                    "media": {
+                        "$ref": "#/components/schemas/Media"
+                    },
+                    "schedule": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Schedule"
+                    },
+                    "public": {
+                        "type": "boolean",
+                        "title": "Public"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type"
+                    },
+                    "session": {
+                        "type": "string",
+                        "title": "Session"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "s3_prefix",
+                    "created_at",
+                    "s3_keys",
+                    "media",
+                    "schedule",
+                    "public",
+                    "type",
+                    "session"
+                ],
+                "title": "DebateDocument"
+            },
             "FacetFilter": {
                 "properties": {
                     "facetField": {
@@ -160,6 +213,29 @@
                 "type": "object",
                 "title": "HTTPValidationError"
             },
+            "Media": {
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "title": "Key"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type"
+                    },
+                    "format": {
+                        "type": "string",
+                        "title": "Format"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "key",
+                    "type",
+                    "format"
+                ],
+                "title": "Media"
+            },
             "MongoMetadataRequest": {
                 "properties": {
                     "prefix": {
@@ -167,8 +243,7 @@
                         "title": "Prefix",
                         "description": "S3 prefix",
                         "examples": [
-                            "HRC_20220328T0000",
-                            "wrong_value"
+                            "HRC_20220328T0000"
                         ]
                     }
                 },
@@ -177,6 +252,85 @@
                     "prefix"
                 ],
                 "title": "MongoMetadataRequest"
+            },
+            "MongoMetadataResponse": {
+                "properties": {
+                    "debate": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DebateDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "speakers": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SpeakersDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "segments": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SegmentsDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "subtitles": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SubtitlesDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "subtitles_en": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SubtitlesDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "title": "MongoMetadataResponse"
+            },
+            "S3Key": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "type",
+                    "description"
+                ],
+                "title": "S3Key"
             },
             "S3MediaUrlRequest": {
                 "properties": {
@@ -261,6 +415,50 @@
                 ],
                 "title": "S3MediaUrls"
             },
+            "Segment": {
+                "properties": {
+                    "segment_nr": {
+                        "type": "integer",
+                        "title": "Segment Nr"
+                    },
+                    "speaker_id": {
+                        "type": "string",
+                        "title": "Speaker Id"
+                    },
+                    "start": {
+                        "type": "number",
+                        "title": "Start"
+                    },
+                    "end": {
+                        "type": "number",
+                        "title": "End"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "segment_nr",
+                    "speaker_id",
+                    "start",
+                    "end"
+                ],
+                "title": "Segment"
+            },
+            "SegmentsDocument": {
+                "properties": {
+                    "segments": {
+                        "items": {
+                            "$ref": "#/components/schemas/Segment"
+                        },
+                        "type": "array",
+                        "title": "Segments"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "segments"
+                ],
+                "title": "SegmentsDocument"
+            },
             "SolrRequest": {
                 "properties": {
                     "queryTerm": {
@@ -310,6 +508,99 @@
                     "facetFilters"
                 ],
                 "title": "SolrRequest"
+            },
+            "Speaker": {
+                "properties": {
+                    "speaker_id": {
+                        "type": "string",
+                        "title": "Speaker Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "role_tag": {
+                        "type": "string",
+                        "title": "Role Tag"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "speaker_id",
+                    "name",
+                    "role_tag"
+                ],
+                "title": "Speaker"
+            },
+            "SpeakersDocument": {
+                "properties": {
+                    "speakers": {
+                        "items": {
+                            "$ref": "#/components/schemas/Speaker"
+                        },
+                        "type": "array",
+                        "title": "Speakers"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "speakers"
+                ],
+                "title": "SpeakersDocument"
+            },
+            "Subtitle": {
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "title": "Index"
+                    },
+                    "start": {
+                        "type": "number",
+                        "title": "Start"
+                    },
+                    "end": {
+                        "type": "number",
+                        "title": "End"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    },
+                    "speaker_id": {
+                        "type": "string",
+                        "title": "Speaker Id"
+                    },
+                    "segment_nr": {
+                        "type": "integer",
+                        "title": "Segment Nr"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "index",
+                    "start",
+                    "end",
+                    "content",
+                    "speaker_id",
+                    "segment_nr"
+                ],
+                "title": "Subtitle"
+            },
+            "SubtitlesDocument": {
+                "properties": {
+                    "subtitles": {
+                        "items": {
+                            "$ref": "#/components/schemas/Subtitle"
+                        },
+                        "type": "array",
+                        "title": "Subtitles"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "subtitles"
+                ],
+                "title": "SubtitlesDocument"
             },
             "ValidationError": {
                 "properties": {
