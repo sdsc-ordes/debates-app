@@ -3,7 +3,7 @@
 ## Debates Processing Pipeline
 
 - **UN Media DataLoader**: `odtp-unog-digitalrecordings-downloader`: Component to download a recording from the UNOG Digital Recordinfs platform.
-- **Match Faces to Speakers**: `odtp-faces-indentifier`: Component to identify faces from video frames.
+- **Match Faces to Speakers**: `odtp-faces-identifier`: Component to identify faces from video frames.
 - **S3 Dataloader** `odtp-s3datauploader`: Component to upload data output to an S3 folder
 
 ## Debates App Features

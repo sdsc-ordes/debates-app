@@ -1,6 +1,10 @@
 # Processing Pipeline
 
-The processing pipeline ...
+!!! note
+
+    The pipeline can and has been run so far on a private GPU server
+
+The processing pipeline:
 
 ``` mermaid
 graph TB
