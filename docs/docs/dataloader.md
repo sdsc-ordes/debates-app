@@ -86,7 +86,7 @@ schedule:
 
 - The metadata in `context` and  `schedule` have been derived from https://conf.unog.ch/digitalrecordings/en
 - `s3_prefix`: is the prefix or directory on S3, where the files for the media item are stored
-- `media`: points to the actual media file that is played in the `mediaplayer`:
+- `media`: points to the actual media file that is played in the `media player`:
 
 `media` subkeys:
 

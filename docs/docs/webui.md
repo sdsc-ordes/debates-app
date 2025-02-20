@@ -27,7 +27,7 @@ graph TB
 Currently the User interface has no Authentication added. In a [Server installation](../install/server.md) we installed two password protected users: (see `nginx` folder)
 
 - `reader`: can only view the page
-- `editor`: can add annotation on the videoplayer page
+- `editor`: can add annotation on the media player page
 
 You also have these roles in other installation mode, by just going on the routes:
 
@@ -38,14 +38,14 @@ You also have these roles in other installation mode, by just going on the route
 
 ![Search interface](static/content/editor-homepage.png){ width="800", caption="hello" }
 /// caption
-Homepage of the Editor User avaliable at `/edit`
+Homepage of the Editor User available at `/edit`
 ///
 
 ## Homepage Reader
 
 ![Search interface](static/content/reader-homepage.png){ width="800", caption="hello" }
 /// caption
-Homepage of the Reader User avaliable at `/`
+Homepage of the Reader User available at `/`
 ///
 
 ## Search Page
@@ -58,14 +58,14 @@ Search interface to make speaker statements searchable available at `/search`
 ## Mediaplayer Page as Editor
 
 
-![Search interface](static/content/videoplayer-editor.png){ width="800", caption="hello" }
+![Search interface](static/content/mediaplayer-editor.png){ width="800", caption="hello" }
 /// caption
-Videoplayer detail page for the reader user to compare transcripts and translations
+Media player detail page for the reader user to compare transcripts and translations
 ///
 
 ## Mediaplayer Page as Reader
 
-![Search interface](static/content/videoplayer-interface.png){ width="800" }
+![Search interface](static/content/mediaplayer-interface.png){ width="800" }
 /// caption
-Videoplayer detail page for the Editor user: the editor user can correct the transcripts and translations and add speaker name and Role
+Media player detail page for the Editor user: the editor user can correct the transcripts and translations and add speaker name and Role
 ///

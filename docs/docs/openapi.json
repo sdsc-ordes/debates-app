@@ -8,6 +8,7 @@
         "/get-media-urls": {
             "post": {
                 "summary": "Get Media Urls",
+                "description": "Get signed media urls for a debate: these urls allow to directly access objects on S3",
                 "operationId": "get_media_urls_get_media_urls_post",
                 "requestBody": {
                     "content": {
@@ -24,7 +25,9 @@
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {}
+                                "schema": {
+                                    "$ref": "#/components/schemas/S3MediaUrlResponse"
+                                }
                             }
                         }
                     },
@@ -44,87 +47,13 @@
         "/mongo-metadata": {
             "post": {
                 "summary": "Mongo Metadata",
-                "description": "Get Metadata for Debates Object",
+                "description": "Get Metadata for Debates Object: get full debate with speakers, segments and subtitles",
                 "operationId": "mongo_metadata_mongo_metadata_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/S3MetadataRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/update-speakers": {
-            "post": {
-                "summary": "Mongo Metadata",
-                "description": "Update speakers",
-                "operationId": "mongo_metadata_update_speakers_post",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateSpeakersRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/update-subtitles": {
-            "post": {
-                "summary": "Mongo Metadata",
-                "description": "Update subtitles",
-                "operationId": "mongo_metadata_update_subtitles_post",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateSubtitlesRequest"
+                                "$ref": "#/components/schemas/MongoMetadataRequest"
                             }
                         }
                     },
@@ -192,23 +121,23 @@
     },
     "components": {
         "schemas": {
-            "EnumSubtitleType": {
-                "type": "string",
-                "enum": [
-                    "Transcript",
-                    "Translation"
-                ],
-                "title": "EnumSubtitleType"
-            },
             "FacetFilter": {
                 "properties": {
                     "facetField": {
                         "type": "string",
-                        "title": "Facetfield"
+                        "title": "Facetfield",
+                        "description": "Solr facet field name",
+                        "examples": [
+                            "statement_type"
+                        ]
                     },
                     "facetValue": {
                         "type": "string",
-                        "title": "Facetvalue"
+                        "title": "Facetvalue",
+                        "description": "Solr facet field value",
+                        "examples": [
+                            "translation"
+                        ]
                     }
                 },
                 "type": "object",
@@ -231,22 +160,54 @@
                 "type": "object",
                 "title": "HTTPValidationError"
             },
+            "MongoMetadataRequest": {
+                "properties": {
+                    "prefix": {
+                        "type": "string",
+                        "title": "Prefix",
+                        "description": "S3 prefix",
+                        "examples": [
+                            "HRC_20220328T0000",
+                            "wrong_value"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prefix"
+                ],
+                "title": "MongoMetadataRequest"
+            },
             "S3MediaUrlRequest": {
                 "properties": {
                     "prefix": {
                         "type": "string",
-                        "title": "Prefix"
+                        "title": "Prefix",
+                        "description": "S3 prefix",
+                        "examples": [
+                            "HRC_20220328T10000"
+                        ]
                     },
                     "objectKeys": {
                         "items": {
                             "type": "string"
                         },
                         "type": "array",
-                        "title": "Objectkeys"
+                        "title": "Objectkeys",
+                        "description": "List of S3 object keys",
+                        "examples": [
+                            [
+                                "HRC_20220328T10000-files.json"
+                            ]
+                        ]
                     },
                     "mediaKey": {
                         "type": "string",
-                        "title": "Mediakey"
+                        "title": "Mediakey",
+                        "description": "Object key for main media file",
+                        "examples": [
+                            "HRC_20220328T10000.mp4"
+                        ]
                     }
                 },
                 "type": "object",
@@ -257,42 +218,88 @@
                 ],
                 "title": "S3MediaUrlRequest"
             },
-            "S3MetadataRequest": {
+            "S3MediaUrlResponse": {
                 "properties": {
-                    "prefix": {
+                    "signedUrls": {
+                        "items": {
+                            "$ref": "#/components/schemas/S3MediaUrls"
+                        },
+                        "type": "array",
+                        "title": "Signedurls",
+                        "description": "List of presigned URLs"
+                    },
+                    "signedMediaUrl": {
                         "type": "string",
-                        "title": "Prefix"
+                        "title": "Signedmediaurl",
+                        "description": "Presigned URL for the main media file"
                     }
                 },
                 "type": "object",
                 "required": [
-                    "prefix"
+                    "signedUrls",
+                    "signedMediaUrl"
                 ],
-                "title": "S3MetadataRequest"
+                "title": "S3MediaUrlResponse"
+            },
+            "S3MediaUrls": {
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "title": "Url",
+                        "description": "Url"
+                    },
+                    "label": {
+                        "type": "string",
+                        "title": "Label",
+                        "description": "Label for Url"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url",
+                    "label"
+                ],
+                "title": "S3MediaUrls"
             },
             "SolrRequest": {
                 "properties": {
                     "queryTerm": {
                         "type": "string",
-                        "title": "Queryterm"
+                        "title": "Queryterm",
+                        "description": "Solr query term can be empty",
+                        "examples": [
+                            "honor"
+                        ]
                     },
                     "sortBy": {
                         "type": "string",
-                        "title": "Sortby"
+                        "title": "Sortby",
+                        "description": "Solr sort option",
+                        "examples": [
+                            "start asc"
+                        ]
                     },
                     "facetFields": {
                         "items": {
                             "type": "string"
                         },
                         "type": "array",
-                        "title": "Facetfields"
+                        "title": "Facetfields",
+                        "description": "Solr facet field to return",
+                        "examples": [
+                            [
+                                "debate_schedule",
+                                "statement_type"
+                            ]
+                        ]
                     },
                     "facetFilters": {
                         "items": {
                             "$ref": "#/components/schemas/FacetFilter"
                         },
                         "type": "array",
-                        "title": "Facetfilters"
+                        "title": "Facetfilters",
+                        "description": "Solr facet filters with set values"
                     }
                 },
                 "type": "object",
@@ -303,118 +310,6 @@
                     "facetFilters"
                 ],
                 "title": "SolrRequest"
-            },
-            "Speaker": {
-                "properties": {
-                    "speaker_id": {
-                        "type": "string",
-                        "title": "Speaker Id"
-                    },
-                    "name": {
-                        "type": "string",
-                        "title": "Name"
-                    },
-                    "role_tag": {
-                        "type": "string",
-                        "title": "Role Tag"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "speaker_id",
-                    "name",
-                    "role_tag"
-                ],
-                "title": "Speaker"
-            },
-            "Subtitle": {
-                "properties": {
-                    "index": {
-                        "type": "integer",
-                        "title": "Index"
-                    },
-                    "start": {
-                        "type": "number",
-                        "title": "Start"
-                    },
-                    "end": {
-                        "type": "number",
-                        "title": "End"
-                    },
-                    "content": {
-                        "type": "string",
-                        "title": "Content"
-                    },
-                    "speaker_id": {
-                        "type": "string",
-                        "title": "Speaker Id"
-                    },
-                    "segment_nr": {
-                        "type": "integer",
-                        "title": "Segment Nr"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "index",
-                    "start",
-                    "end",
-                    "content",
-                    "speaker_id",
-                    "segment_nr"
-                ],
-                "title": "Subtitle"
-            },
-            "UpdateSpeakersRequest": {
-                "properties": {
-                    "prefix": {
-                        "type": "string",
-                        "title": "Prefix"
-                    },
-                    "speakers": {
-                        "items": {
-                            "$ref": "#/components/schemas/Speaker"
-                        },
-                        "type": "array",
-                        "title": "Speakers"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "prefix",
-                    "speakers"
-                ],
-                "title": "UpdateSpeakersRequest"
-            },
-            "UpdateSubtitlesRequest": {
-                "properties": {
-                    "prefix": {
-                        "type": "string",
-                        "title": "Prefix"
-                    },
-                    "segmentNr": {
-                        "type": "integer",
-                        "title": "Segmentnr"
-                    },
-                    "subtitles": {
-                        "items": {
-                            "$ref": "#/components/schemas/Subtitle"
-                        },
-                        "type": "array",
-                        "title": "Subtitles"
-                    },
-                    "subtitleType": {
-                        "$ref": "#/components/schemas/EnumSubtitleType"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "prefix",
-                    "segmentNr",
-                    "subtitles",
-                    "subtitleType"
-                ],
-                "title": "UpdateSubtitlesRequest"
             },
             "ValidationError": {
                 "properties": {
