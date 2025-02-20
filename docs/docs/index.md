@@ -26,7 +26,7 @@ The user interface shows maybe best what has been achieved:
 Search interface to make speaker statements searchable
 ///
 
-![Search interface](static/content/videoplayer-interface.png){ width="800" }
+![Search interface](static/content/mediaplayer-interface.png){ width="800" }
 /// caption
 Media player to compare and edit speaker information, transcripts and translations
 ///
