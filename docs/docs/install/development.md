@@ -2,13 +2,19 @@
 
 In the development setup the docker compose file `docker-compose.dev.yml` is used to run only the databases as services. The dataloader and frontend are then run locally outside of docker.
 
+```
+git clone git@github.com:sdsc-ordes/debates-app.git
+cd debates-app
+git submodule update --init
+```
+
 ## Environment Variables for docker compose
 
 The env variables are similar to the [compose setup](compose.md): you have to set:
 
 - [environment for the debates app](compose.md#environment-variables-for-debates-app)
 
-## Docker compose
+## Dev setup of docker compose
 
 The development setup has it's own docker compose file `docker-compose.dev.yml`.
 
@@ -17,7 +23,7 @@ docker compose -f docker-compose.dev.yml build
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-## Setup the dataloader backend
+## Dev setup of the dataloader backend
 
 The backend needs now its own `backend.env` as follows:
 
@@ -56,7 +62,7 @@ source .venv/bin/activate
 python src/debates.py serve
 ```
 
-## Setup of the frontend
+## Dev setup of the frontend
 
 You need to adapt the `frontend/.env`:
 
@@ -78,3 +84,16 @@ The frontend should now be up and running and tell you the url where it is avail
 ## Load data
 
 See [compose setup](compose.md#load-data)
+
+## Dev setup of the documentation
+
+The docs are powered by [uv](https://github.com/astral-sh/uv) as python package manager and [Material for Mkdocs](https://squidfunk.github.io/mkdocs-material/) as documentation package
+
+```
+cd docs
+uv build
+uv venv
+source .venv/bin/activate
+uv sync
+mkdocs serve
+```

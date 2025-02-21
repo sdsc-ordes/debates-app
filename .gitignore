@@ -6,3 +6,4 @@ build
 
 # Docs
 docs/site/
+docs/docs.egg-info/*
