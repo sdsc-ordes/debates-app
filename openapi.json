@@ -1,0 +1,640 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "FastAPI",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/get-media-urls": {
+            "post": {
+                "summary": "Get Media Urls",
+                "description": "Get signed media urls for a debate: these urls allow to directly access objects on S3",
+                "operationId": "get_media_urls_get_media_urls_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/S3MediaUrlRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/S3MediaUrlResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mongo-metadata": {
+            "post": {
+                "summary": "Mongo Metadata",
+                "operationId": "mongo_metadata_mongo_metadata_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MongoMetadataRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MongoMetadataResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/search-solr": {
+            "post": {
+                "summary": "Search Solr",
+                "description": "Fetch search results from Solr",
+                "operationId": "search_solr_search_solr_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SolrRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DebateDocument": {
+                "properties": {
+                    "s3_prefix": {
+                        "type": "string",
+                        "title": "S3 Prefix"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "s3_keys": {
+                        "items": {
+                            "$ref": "#/components/schemas/S3Key"
+                        },
+                        "type": "array",
+                        "title": "S3 Keys"
+                    },
+                    "media": {
+                        "$ref": "#/components/schemas/Media"
+                    },
+                    "schedule": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Schedule"
+                    },
+                    "public": {
+                        "type": "boolean",
+                        "title": "Public"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type"
+                    },
+                    "session": {
+                        "type": "string",
+                        "title": "Session"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "s3_prefix",
+                    "created_at",
+                    "s3_keys",
+                    "media",
+                    "schedule",
+                    "public",
+                    "type",
+                    "session"
+                ],
+                "title": "DebateDocument"
+            },
+            "FacetFilter": {
+                "properties": {
+                    "facetField": {
+                        "type": "string",
+                        "title": "Facetfield",
+                        "description": "Solr facet field name",
+                        "examples": [
+                            "statement_type"
+                        ]
+                    },
+                    "facetValue": {
+                        "type": "string",
+                        "title": "Facetvalue",
+                        "description": "Solr facet field value",
+                        "examples": [
+                            "translation"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "facetField",
+                    "facetValue"
+                ],
+                "title": "FacetFilter"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "Media": {
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "title": "Key"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type"
+                    },
+                    "format": {
+                        "type": "string",
+                        "title": "Format"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "key",
+                    "type",
+                    "format"
+                ],
+                "title": "Media"
+            },
+            "MongoMetadataRequest": {
+                "properties": {
+                    "prefix": {
+                        "type": "string",
+                        "title": "Prefix",
+                        "description": "S3 prefix",
+                        "examples": [
+                            "HRC_20220328T0000"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prefix"
+                ],
+                "title": "MongoMetadataRequest"
+            },
+            "MongoMetadataResponse": {
+                "properties": {
+                    "debate": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DebateDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "speakers": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SpeakersDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "segments": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SegmentsDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "subtitles": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SubtitlesDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "subtitles_en": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/SubtitlesDocument"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "title": "MongoMetadataResponse"
+            },
+            "S3Key": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Type"
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Description"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "type",
+                    "description"
+                ],
+                "title": "S3Key"
+            },
+            "S3MediaUrlRequest": {
+                "properties": {
+                    "prefix": {
+                        "type": "string",
+                        "title": "Prefix",
+                        "description": "S3 prefix",
+                        "examples": [
+                            "HRC_20220328T10000"
+                        ]
+                    },
+                    "objectKeys": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Objectkeys",
+                        "description": "List of S3 object keys",
+                        "examples": [
+                            [
+                                "HRC_20220328T10000-files.json"
+                            ]
+                        ]
+                    },
+                    "mediaKey": {
+                        "type": "string",
+                        "title": "Mediakey",
+                        "description": "Object key for main media file",
+                        "examples": [
+                            "HRC_20220328T10000.mp4"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prefix",
+                    "objectKeys",
+                    "mediaKey"
+                ],
+                "title": "S3MediaUrlRequest"
+            },
+            "S3MediaUrlResponse": {
+                "properties": {
+                    "signedUrls": {
+                        "items": {
+                            "$ref": "#/components/schemas/S3MediaUrls"
+                        },
+                        "type": "array",
+                        "title": "Signedurls",
+                        "description": "List of presigned URLs"
+                    },
+                    "signedMediaUrl": {
+                        "type": "string",
+                        "title": "Signedmediaurl",
+                        "description": "Presigned URL for the main media file"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "signedUrls",
+                    "signedMediaUrl"
+                ],
+                "title": "S3MediaUrlResponse"
+            },
+            "S3MediaUrls": {
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "title": "Url",
+                        "description": "Url"
+                    },
+                    "label": {
+                        "type": "string",
+                        "title": "Label",
+                        "description": "Label for Url"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "url",
+                    "label"
+                ],
+                "title": "S3MediaUrls"
+            },
+            "Segment": {
+                "properties": {
+                    "segment_nr": {
+                        "type": "integer",
+                        "title": "Segment Nr"
+                    },
+                    "speaker_id": {
+                        "type": "string",
+                        "title": "Speaker Id"
+                    },
+                    "start": {
+                        "type": "number",
+                        "title": "Start"
+                    },
+                    "end": {
+                        "type": "number",
+                        "title": "End"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "segment_nr",
+                    "speaker_id",
+                    "start",
+                    "end"
+                ],
+                "title": "Segment"
+            },
+            "SegmentsDocument": {
+                "properties": {
+                    "segments": {
+                        "items": {
+                            "$ref": "#/components/schemas/Segment"
+                        },
+                        "type": "array",
+                        "title": "Segments"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "segments"
+                ],
+                "title": "SegmentsDocument"
+            },
+            "SolrRequest": {
+                "properties": {
+                    "queryTerm": {
+                        "type": "string",
+                        "title": "Queryterm",
+                        "description": "Solr query term can be empty",
+                        "examples": [
+                            "honor"
+                        ]
+                    },
+                    "sortBy": {
+                        "type": "string",
+                        "title": "Sortby",
+                        "description": "Solr sort option",
+                        "examples": [
+                            "start asc"
+                        ]
+                    },
+                    "facetFields": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Facetfields",
+                        "description": "Solr facet field to return",
+                        "examples": [
+                            [
+                                "debate_schedule",
+                                "statement_type"
+                            ]
+                        ]
+                    },
+                    "facetFilters": {
+                        "items": {
+                            "$ref": "#/components/schemas/FacetFilter"
+                        },
+                        "type": "array",
+                        "title": "Facetfilters",
+                        "description": "Solr facet filters with set values"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "queryTerm",
+                    "sortBy",
+                    "facetFields",
+                    "facetFilters"
+                ],
+                "title": "SolrRequest"
+            },
+            "Speaker": {
+                "properties": {
+                    "speaker_id": {
+                        "type": "string",
+                        "title": "Speaker Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "role_tag": {
+                        "type": "string",
+                        "title": "Role Tag"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "speaker_id",
+                    "name",
+                    "role_tag"
+                ],
+                "title": "Speaker"
+            },
+            "SpeakersDocument": {
+                "properties": {
+                    "speakers": {
+                        "items": {
+                            "$ref": "#/components/schemas/Speaker"
+                        },
+                        "type": "array",
+                        "title": "Speakers"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "speakers"
+                ],
+                "title": "SpeakersDocument"
+            },
+            "Subtitle": {
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "title": "Index"
+                    },
+                    "start": {
+                        "type": "number",
+                        "title": "Start"
+                    },
+                    "end": {
+                        "type": "number",
+                        "title": "End"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    },
+                    "speaker_id": {
+                        "type": "string",
+                        "title": "Speaker Id"
+                    },
+                    "segment_nr": {
+                        "type": "integer",
+                        "title": "Segment Nr"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "index",
+                    "start",
+                    "end",
+                    "content",
+                    "speaker_id",
+                    "segment_nr"
+                ],
+                "title": "Subtitle"
+            },
+            "SubtitlesDocument": {
+                "properties": {
+                    "subtitles": {
+                        "items": {
+                            "$ref": "#/components/schemas/Subtitle"
+                        },
+                        "type": "array",
+                        "title": "Subtitles"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "subtitles"
+                ],
+                "title": "SubtitlesDocument"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}
